@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Metadata -->
+    <title>Karuna House — Field & Garden Guide</title>
+    <meta name="description" content="An interactive botanical field guide and ecological journal for the Karuna House estate's gardens and local wildlife. Browse desert succulents, moderate shrubs, moist climbers, and regional fauna.">
+    
+    <!-- Google Fonts: Playfair Display for headers, Outfit for body text -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- App Wrapper -->
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <svg width="40" height="40" viewBox="0 0 100 100" class="leaf-svg" aria-label="Botanical Logo">
+                    <path d="M50,90 C50,90 20,60 20,35 C20,15 40,10 50,30 C60,10 80,15 80,35 C80,60 50,90 50,90 Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                    <path d="M50,30 L50,90" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M50,50 Q35,45 30,35" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M50,65 Q35,60 26,50" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M50,55 Q65,50 70,40" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M50,70 Q65,65 74,55" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <div class="logo-text">
+                    <h1>Karuna House</h1>
+                    <span>KARUNA HOUSE</span>
+                </div>
+            </div>
+            
+            <p class="header-tagline">"An interactive botanical catalog and ecological journal."</p>
+            
+            <div class="header-nav">
+                <button class="nav-btn active" id="tab-plants" data-tab="plants-section">🌿 Plants & Flora</button>
+                <button class="nav-btn" id="tab-map" data-tab="map-section">🗺️ Estate Map</button>
+                <button class="nav-btn" id="tab-wildlife" data-tab="wildlife-section">🦅 Wildlife Notebook</button>
+                <button class="nav-btn" id="tab-care" data-tab="care-section">📋 Tasks & Care Log</button>
+                <button class="nav-btn" id="tab-analytics" data-tab="analytics-section">📊 Analytics Dashboard</button>
+                <button class="nav-btn" id="tab-identifications" data-tab="identifications-section">🏷️ Identifications</button>
+            </div>
+        </header>
+
+        <!-- Main Viewport -->
+        <main class="app-body">
+            
+            <!-- SECTION 1: Plants & Flora Catalog -->
+            <section class="tab-section active" id="plants-section">
+                
+                <!-- Dashboard Summary Cards -->
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">🌱</div>
+                        <div class="stat-info">
+                            <h3>Total Species</h3>
+                            <span class="stat-value" id="stat-total-plants">34</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💧</div>
+                        <div class="stat-info">
+                            <h3>Irrigation Zones</h3>
+                            <span class="stat-value" id="stat-watering-groups">3 Groups</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" id="sick-alert-card">
+                        <div class="stat-icon alert">⚠️</div>
+                        <div class="stat-info">
+                            <h3>Attention Needed</h3>
+                            <span class="stat-value alert-text" id="stat-sick-plants">2 Sick</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Search & Filtering Interface -->
+                <div class="filters-container">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="search-input" placeholder="Search by plant name, flower type, facts...">
+                    </div>
+                    
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <label for="filter-zone">Zone / Water</label>
+                            <select id="filter-zone">
+                                <option value="all">All Zones</option>
+                                <option value="A">Zone A (Low Succulents)</option>
+                                <option value="B">Zone B (Moderate Shrubs)</option>
+                                <option value="C">Zone C (Moist/Vines)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="filter-sun">Sunlight</label>
+                            <select id="filter-sun">
+                                <option value="all">All Exposures</option>
+                                <option value="sun">Full Sun</option>
+                                <option value="part">Partial Shade/Sun</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="filter-status">Health</label>
+                            <select id="filter-status">
+                                <option value="all">All Statuses</option>
+                                <option value="healthy">Healthy Only</option>
+                                <option value="sick">Attention Needed</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Catalog Grid -->
+                <div class="catalog-grid" id="catalog-grid">
+                    <!-- Cards injected dynamically by app.js -->
+                </div>
+            </section>
+
+            <!-- SECTION 1.5: Estate Map -->
+            <section class="tab-section" id="map-section">
+                <div class="section-intro">
+                    <h2>Garden Plot & House Map: 'Karuna House' (Master Blueprint)</h2>
+                    <p>Orthographic isometric 3D master blueprint diagram showing architectural footprints, driveway configurations, property boundaries, and Sonoran desert flora zones.</p>
+                </div>
+                <div class="map-viewer-container">
+                    <div class="map-image-wrapper">
+                        <div class="map-interactive-container" id="map-interactive-container">
+                            <img src="assets/karuna_house_blueprint.png?v=3" alt="Karuna House Master Blueprint" id="map-blueprint-img">
+                            <div class="pins-overlay" id="pins-overlay" title="Click anywhere on the blueprint to map a plant!"></div>
+                        </div>
+                        <div class="map-overlay-btn" id="btn-fullscreen-map" title="Zoom Blueprint Image">🔍 Zoom Blueprint</div>
+                    </div>
+                    <div class="map-legend-panel">
+                        <h3>Map Controls</h3>
+                        <div class="form-group map-filter-group">
+                            <label for="map-filter-plant" class="map-filter-label">Filter Map Pins</label>
+                            <select id="map-filter-plant" class="map-filter-select">
+                                <option value="all">📍 Show All Species</option>
+                                <!-- Placed dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="mapped-list-container map-mapped-list-container">
+                            <label class="map-mapped-list-label">Mapped Plants Index</label>
+                            <div class="mapped-plants-list map-mapped-plants-list" id="mapped-plants-list">
+                                <!-- Placed dynamically -->
+                            </div>
+                        </div>
+
+                        <hr class="legend-divider">
+                        
+                        <h3>Map Specifications</h3>
+                        <div class="map-spec-item">
+                            <span class="spec-label">Location:</span>
+                            <span class="spec-val">36239 S Cypress Dr, Tucson, AZ 85739</span>
+                        </div>
+                        <div class="map-spec-item">
+                            <span class="spec-label">Grid Coordinates:</span>
+                            <span class="spec-val">A1-J11 System (10 Columns, 11 Rows)</span>
+                        </div>
+                        <div class="map-spec-item">
+                            <span class="spec-label">Certification Stamp:</span>
+                            <span class="spec-val">P13 (December 2026 Audit)</span>
+                        </div>
+                        <div class="map-spec-item">
+                            <span class="spec-label">Verification Paths:</span>
+                            <span class="spec-val">P1-P6 Mapping Channels Locked</span>
+                        </div>
+                        <hr class="legend-divider">
+                        <div class="map-footnote">
+                            <p>★ Explicit Structure Inclusion Check (V4.0 Master Ledger Corrected): This generated database map explicitly identifies, renders, and contains high-fidelity mapped details for: Existing Real-World House Footprint, Main Red-Tile Roof Trajectory, Active Concrete Driveway, Verified Northern Boundary Fence Line (with neighbor 36217), and Low Southern Perimeter Retaining Stone Borders.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: Fauna & Flora Reference Notebook -->
+            <section class="tab-section" id="wildlife-section">
+                <div class="section-intro">
+                    <h2>Karuna House Ecological Notebook</h2>
+                    <p>Archival scientific reference diagrams and observations of local wildlife, predators, and native flora inhabiting the foothills surrounding the estate.</p>
+                </div>
+                
+                <!-- Notebook Layout -->
+                <div class="notebook-layout">
+                    <!-- Nav Tabs for reference sketches -->
+                    <div class="notebook-tabs">
+                        <button class="notebook-tab-btn active" data-ref-img="assets/references/IMG_8315.PNG" data-ref-title="Mammals & Large Predators" data-ref-desc="Local mammals including coyotes (Canis latrans), bobcats (Lynx rufus), mule deer, cougars or mountain lions (Puma concolor), and birds of prey. The local landscape acts as a crucial wildlife corridor.">
+                            🐾 Mammals & Predators
+                        </button>
+                        <button class="notebook-tab-btn" data-ref-img="assets/references/IMG_8314.PNG" data-ref-title="Native Oak & Mistletoe" data-ref-desc="Key desert-woodland botanical elements: Desert Mistletoe (Phoradendron californicum), Canyon Grapevine (Vitis arizonica), Arizona White Oak (Quercus arizonica), and Emory Oak (Quercus emoryi). Oak canopies provide crucial microclimates.">
+                            🌳 Oak & Mistletoe
+                        </button>
+                        <button class="notebook-tab-btn" data-ref-img="assets/references/IMG_8316.PNG" data-ref-title="Swallowtails & Vineyards" data-ref-desc="Canyon Grapevine (Vitis arizonica) hosting Eastern Tiger Swallowtails (Papilio glaucus), Pipevine Swallowtails (Battus philenor), and hummingbirds. These pollinators sustain the surrounding chaparral.">
+                            🦋 Swallowtails & Vineyards
+                        </button>
+                        <button class="notebook-tab-btn" data-ref-img="assets/references/IMG_8317.PNG" data-ref-title="Hummingbirds & Butterflies" data-ref-desc="Vibrant ecological interactions featuring native butterflies (tiger and pipevine swallowtails) and black-chinned hummingbirds drinking from Canyon Grapevine blossoms.">
+                            🌸 Pollinators & Grapes
+                        </button>
+                        <button class="notebook-tab-btn" data-ref-img="assets/references/IMG_8313.PNG" data-ref-title="Scientific Specimen Index" data-ref-desc="Archival scientific plate depicting comparative anatomy of native predators, birds, and plant species of the Southwest desert-chaparral transition zone.">
+                            📖 Comparative Anatomy Plate
+                        </button>
+                    </div>
+                    
+                    <!-- Reference Viewer Panel -->
+                    <div class="notebook-viewer-panel">
+                        <div class="viewer-image-container">
+                            <img id="viewer-img" src="assets/references/IMG_8315.PNG" alt="Scientific Plate">
+                            <div class="viewer-overlay-btn" id="btn-fullscreen-img" title="Zoom Reference Image">🔍 Zoom Illustration</div>
+                        </div>
+                        <div class="viewer-details">
+                            <h3 id="viewer-title">Mammals & Large Predators</h3>
+                            <p id="viewer-desc">Local mammals including coyotes (Canis latrans), bobcats (Lynx rufus), mule deer, cougars or mountain lions (Puma concolor), and birds of prey. The local landscape acts as a crucial wildlife corridor.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: Tasks & Care Log Panel -->
+            <section class="tab-section" id="care-section">
+                <div class="section-intro">
+                    <h2>Garden Tasks Planner & Operations Journal</h2>
+                    <p>Schedule future garden chores, view upcoming tasks, log care activities, and track historical treatments for all estate flora.</p>
+                </div>
+                
+                <div class="care-planner-layout">
+                    <!-- Left Column: Tasks Board -->
+                    <div class="planner-column">
+                        <div class="planner-card">
+                            <div class="card-header-row">
+                                <h3>📋 Upcoming Tasks Checklist</h3>
+                                <span class="task-count-badge" id="task-pending-count">0 Pending</span>
+                            </div>
+                            <div class="task-list" id="task-list">
+                                <!-- Dynamic checkable list rendered by app.js -->
+                            </div>
+                        </div>
+
+                        <div class="planner-card mt-3">
+                            <h3>📅 Schedule a New Task</h3>
+                            <form id="task-scheduler-form" class="task-form">
+                                <div class="form-group">
+                                    <label for="task-plant-select">Select Plant</label>
+                                    <select id="task-plant-select" required>
+                                        <option value="" disabled selected>Choose a plant...</option>
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+                                <div class="form-grid-2">
+                                    <div class="form-group">
+                                        <label for="task-type">Task Type</label>
+                                        <select id="task-type" required>
+                                            <option value="Watering">💦 Watering</option>
+                                            <option value="Pruning">✂️ Pruning</option>
+                                            <option value="Treatment">💊 Pest Treatment</option>
+                                            <option value="Fertilization">🧪 Fertilization</option>
+                                            <option value="Checkup">📋 General Checkup</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="task-due-date">Due Date</label>
+                                        <input type="date" id="task-due-date" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="task-notes">Task Instructions</label>
+                                    <textarea id="task-notes" rows="2" placeholder="e.g. Give 5 gallons of water, check leaves for aphids..." required></textarea>
+                                </div>
+                                <button type="submit" class="primary-btn">📅 Add to Planner</button>
+                            </form>
+                        </div>
+
+                        <!-- Fertilizer Schedule Panel -->
+                        <div class="planner-card mt-3">
+                            <div class="card-header-row">
+                                <h3>🧪 Fertilizer Schedule</h3>
+                                <span class="fert-due-badge" id="fert-due-count">0 Due</span>
+                            </div>
+                            <div class="fert-schedule-list" id="fertilizer-schedule-list">
+                                <!-- Rendered by renderFertilizerSchedule() -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Care Log Form & History Feed -->
+                    <div class="planner-column">
+                        <div class="planner-card">
+                            <h3>Record Quick Care Activity</h3>
+                            <form id="care-form" class="care-quick-form">
+                                <div class="form-grid-2">
+                                    <div class="form-group">
+                                        <label for="care-plant-select">Select Plant</label>
+                                        <select id="care-plant-select" required>
+                                            <option value="" disabled selected>Choose a plant...</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="care-type">Activity Type</label>
+                                        <select id="care-type" required>
+                                            <option value="Watering">💦 Watering & Irrigation</option>
+                                            <option value="Pruning">✂️ Pruning & Shaping</option>
+                                            <option value="Treatment">💊 Pest/Disease Treatment</option>
+                                            <option value="Fertilization">🧪 Fertilizer & Feed</option>
+                                            <option value="General">📋 General Checkup</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-grid-2">
+                                    <div class="form-group">
+                                        <label for="care-status-update">Health Status</label>
+                                        <select id="care-status-update">
+                                            <option value="Healthy">Healthy</option>
+                                            <option value="⚠️ SICK">⚠️ Sick / Needs Care</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group care-submit-group">
+                                        <button type="submit" class="primary-btn care-submit-btn">💾 Save Log Entry</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="care-notes">Activity Notes</label>
+                                    <textarea id="care-notes" rows="2" placeholder="Describe the care given..." required></textarea>
+                                </div>
+                            </form>
+
+                            <!-- Fertilizer Detail Sub-Panel (reveals when type = Fertilization) -->
+                            <div id="fertilizer-detail-panel" class="fertilizer-detail-panel" aria-hidden="true">
+                                <div class="fert-panel-header">
+                                    <span class="fert-panel-icon">🧪</span>
+                                    <span>Fertilizer Details</span>
+                                </div>
+                                <div class="form-grid-2">
+                                    <div class="form-group">
+                                        <label for="fert-product">Product / Brand</label>
+                                        <input type="text" id="fert-product" placeholder="e.g. Osmocote Plus" autocomplete="off">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fert-formula">Formula Type</label>
+                                        <select id="fert-formula">
+                                            <option value="">— Select formula —</option>
+                                            <option value="balanced" data-npk="10-10-10">⚖️ Balanced (10-10-10)</option>
+                                            <option value="nitrogen" data-npk="24-6-12">🌿 Nitrogen-Heavy (24-6-12)</option>
+                                            <option value="phosphorus" data-npk="5-20-10">🌸 Phosphorus-Heavy (5-20-10)</option>
+                                            <option value="potassium" data-npk="6-10-20">🌵 Potassium-Heavy (6-10-20)</option>
+                                            <option value="slow-release" data-npk="14-14-14">⏱️ Slow-Release Granular (14-14-14)</option>
+                                            <option value="liquid" data-npk="7-9-5">💧 Liquid Concentrate (7-9-5)</option>
+                                            <option value="organic" data-npk="4-4-4">🌱 Organic Compost (4-4-4)</option>
+                                            <option value="cactus" data-npk="2-7-7">🏜️ Cactus / Succulent (2-7-7)</option>
+                                            <option value="bloom" data-npk="3-12-6">🌺 Bloom Booster (3-12-6)</option>
+                                            <option value="custom" data-npk="">✏️ Custom (enter manually)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-grid-2">
+                                    <div class="form-group">
+                                        <label for="fert-npk">NPK Ratio</label>
+                                        <input type="text" id="fert-npk" placeholder="e.g. 14-14-14" autocomplete="off">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fert-amount">Application Amount</label>
+                                        <input type="text" id="fert-amount" placeholder="e.g. 1 tbsp / gal" autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="form-grid-2">
+                                    <div class="form-group">
+                                        <label for="fert-method">Application Method</label>
+                                        <select id="fert-method">
+                                            <option value="Soil Drench">💧 Soil Drench</option>
+                                            <option value="Foliar Spray">🌿 Foliar Spray</option>
+                                            <option value="Side-Dress">↔️ Side-Dress (Ring)</option>
+                                            <option value="Top-Dress">⬆️ Top-Dress (Broadcast)</option>
+                                            <option value="Stake / Spike">📍 Stake / Spike</option>
+                                            <option value="Drip Injection">💉 Drip Injection</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="fert-next-date">Next Application</label>
+                                        <input type="date" id="fert-next-date">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="planner-card mt-3">
+                            <div class="feed-header">
+                                <h3>📜 Activity Journal Feed</h3>
+                                <button class="text-btn" id="btn-clear-logs">Clear All Logs</button>
+                            </div>
+                            <div class="care-feed" id="care-feed">
+                                <!-- Logs dynamically rendered by app.js -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3.5: Analytics & Insights Dashboard -->
+            <section class="tab-section" id="analytics-section">
+                <div class="section-intro">
+                    <h2>Garden Analytics & Ecological Health</h2>
+                    <p>Real-time insights on species health ratio, task efficiency metrics, watering loads, and irrigation zone requirements.</p>
+                </div>
+                
+                <div class="analytics-layout">
+                    <!-- Stat Cards Grid -->
+                    <div class="analytics-widgets">
+                        <div class="stat-card">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-info">
+                                <h3>Garden Health Index</h3>
+                                <span class="stat-value" id="analytic-health-index">100%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📅</div>
+                            <div class="stat-info">
+                                <h3>Tasks Competency</h3>
+                                <span class="stat-value" id="analytic-tasks-completed">0/0 Tasks</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🚰</div>
+                            <div class="stat-info">
+                                <h3>Active Watering Load</h3>
+                                <span class="stat-value" id="analytic-watering-load">Low</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div class="analytics-charts-grid">
+                        <div class="chart-card">
+                            <h3>Flora Health Distribution</h3>
+                            <div class="chart-legend">
+                                <span class="legend-dot healthy"></span> Healthy
+                                <span class="legend-dot sick"></span> Attention Needed
+                            </div>
+                            <div class="chart-container" id="chart-health-ratio">
+                                <!-- CSS Horizontal Bars -->
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <h3>Recorded Care Activity Count</h3>
+                            <div class="chart-container" id="chart-activity-freq">
+                                <!-- CSS Vertical Bars -->
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <h3>Water Demands per Irrigation Zone</h3>
+                            <div class="chart-container" id="chart-water-zones">
+                                <!-- CSS Zone Bars -->
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <h3>Plant Count by Water Requirement</h3>
+                            <div class="chart-container" id="chart-water-needs">
+                                <!-- CSS Needs Bar -->
+                            </div>
+                        </div>
+
+                        <!-- Fertilizer Insights Widget -->
+                        <div class="chart-card fert-insight-card">
+                            <h3>🧪 Fertilizer Activity &amp; Schedule</h3>
+                            <div id="fert-insight-widget" class="fert-insight-widget">
+                                <!-- Rendered by renderFertilizerInsights() in app.js -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: Photo Identifications Curation -->
+            <section class="tab-section" id="identifications-section">
+                <div class="section-intro curation-intro-actions">
+                    <div>
+                        <h2>Karuna House Photo Identifications Manager</h2>
+                        <p>Curate photo identifications on the estate. Move images between species in real-time, or create new species dynamically to classify unmatched profiles.</p>
+                    </div>
+                    <button class="primary-btn btn-curation-create" id="btn-create-species-curation">➕ Create New Species</button>
+                </div>
+                
+                <div class="curation-grid" id="curation-grid">
+                    <!-- Photo cards injected dynamically by app.js -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Full-screen Image Modal overlay (Native HTML5 Dialog) -->
+    <dialog class="modal-dialog" id="image-modal" closedby="any" aria-label="Scientific Illustration Viewer">
+        <div class="modal-content-container">
+            <button class="modal-close-btn" id="image-modal-close-x" aria-label="Close Modal">×</button>
+            <div class="modal-img-wrapper">
+                <img id="modal-img" src="" alt="Fullscreen Reference">
+            </div>
+            <div class="modal-caption" id="modal-caption">Plate Caption</div>
+        </div>
+    </dialog>
+
+    <!-- Edit Plant Details Modal (Native HTML5 Dialog) -->
+    <dialog class="modal-dialog" id="edit-plant-dialog" closedby="any" aria-label="Edit Plant Details">
+        <div class="modal-content-container dialog-form-container">
+            <button class="modal-close-btn" id="edit-plant-close-x" aria-label="Close Modal">×</button>
+            <h3>Edit Plant Details</h3>
+            <form id="edit-plant-form" class="edit-dialog-form">
+                <input type="hidden" id="edit-plant-id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-plant-name">Plant Name</label>
+                        <input type="text" id="edit-plant-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-plant-group">Zone / Group</label>
+                        <select id="edit-plant-group" required>
+                            <option value="A">Zone A (Low Succulents)</option>
+                            <option value="B">Zone B (Moderate Shrubs)</option>
+                            <option value="C">Zone C (Moist/Vines)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-plant-flowering">Flowering Description</label>
+                        <input type="text" id="edit-plant-flowering">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-plant-water">Water Requirement</label>
+                        <input type="text" id="edit-plant-water">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-plant-pruning">Pruning Guidelines</label>
+                        <input type="text" id="edit-plant-pruning">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-plant-pest">Pest Alert</label>
+                        <input type="text" id="edit-plant-pest">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit-plant-desc">Description</label>
+                    <textarea id="edit-plant-desc" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-plant-fact">Fun Fact</label>
+                    <input type="text" id="edit-plant-fact">
+                </div>
+                
+                <div class="form-group">
+                    <label>Image Paths / URLs</label>
+                    <div id="edit-image-list" class="edit-image-list">
+                        <!-- Dynamic list of image inputs will be populated here -->
+                    </div>
+                    <div class="edit-image-actions">
+                        <button type="button" class="secondary-btn btn-add-image-form" id="btn-add-edit-image">➕ Add Image URL</button>
+                        <button type="button" class="secondary-btn btn-add-image-form" id="btn-upload-edit-image">📁 Upload Image File</button>
+                    </div>
+                </div>
+
+                <div class="modal-form-actions">
+                    <button type="submit" class="primary-btn">💾 Save Changes</button>
+                    <button type="button" class="secondary-btn" id="btn-cancel-edit">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Map Pin Placement Dialog (Native HTML5 Dialog) -->
+    <dialog class="modal-dialog" id="map-pin-dialog" closedby="any" aria-label="Map a Plant Location">
+        <div class="modal-content-container dialog-form-container dialog-form-container-small">
+            <button class="modal-close-btn" id="map-pin-close-x" aria-label="Close Modal">×</button>
+            <h3 class="map-pin-title">📍 Map Plant Location</h3>
+            <p class="map-pin-desc">Select the species located at this position on the estate blueprint:</p>
+            <form id="map-pin-form">
+                <input type="hidden" id="map-pin-x">
+                <input type="hidden" id="map-pin-y">
+                
+                <div class="form-group">
+                    <label for="map-pin-plant-select">Select Plant</label>
+                    <select id="map-pin-plant-select" required>
+                        <option value="" disabled selected>Choose a plant...</option>
+                        <!-- Dynamic list of plants -->
+                    </select>
+                </div>
+                
+                <div class="modal-form-actions map-pin-form-actions">
+                    <button type="submit" class="primary-btn">💾 Place Pin</button>
+                    <button type="button" class="secondary-btn" id="btn-cancel-map-pin">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Create Custom Species Dialog (Native HTML5 Dialog) -->
+    <dialog class="modal-dialog" id="create-species-dialog" closedby="any" aria-label="Create New Plant Species">
+        <div class="modal-content-container dialog-form-container dialog-new-species">
+            <button class="modal-close-btn" id="create-species-close-x" aria-label="Close Modal">×</button>
+            <h3>➕ Create New Plant Species</h3>
+            <form id="create-species-form" class="edit-dialog-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="new-species-name">Plant Name</label>
+                        <input type="text" id="new-species-name" placeholder="e.g. Crepe Myrtle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-species-group">Zone / Group</label>
+                        <select id="new-species-group" required>
+                            <option value="A">Zone A (Low Succulents)</option>
+                            <option value="B">Zone B (Moderate Shrubs)</option>
+                            <option value="C">Zone C (Moist/Vines)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-species-flowering">Flowering Description</label>
+                        <input type="text" id="new-species-flowering" placeholder="e.g. Showy crinkled clusters">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-species-water">Water Requirement</label>
+                        <input type="text" id="new-species-water" placeholder="e.g. Moderate">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-species-pruning">Pruning Guidelines</label>
+                        <input type="text" id="new-species-pruning" placeholder="e.g. Late winter dormant shaping">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-species-pest">Pest Alert</label>
+                        <input type="text" id="new-species-pest" placeholder="e.g. Aphids / Powdery Mildew">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="new-species-desc">Description</label>
+                    <textarea id="new-species-desc" rows="3" placeholder="Describe the plant's growth habit, leaves, sun requirements..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="new-species-fact">Fun Fact</label>
+                    <input type="text" id="new-species-fact" placeholder="e.g. Bark peels to reveal smooth under-layers">
+                </div>
+                
+                <div class="modal-form-actions">
+                    <button type="submit" class="primary-btn">💾 Create Species</button>
+                    <button type="button" class="secondary-btn" id="btn-cancel-create-species">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Hidden file inputs for image uploading -->
+    <input type="file" id="card-image-upload-input" accept="image/*" class="hidden-file-input" title="Upload Card Image">
+    <input type="file" id="edit-plant-file-input" accept="image/*" class="hidden-file-input" title="Upload Edit Plant Image">
+
+    <!-- Main Application Entry JS -->
+    <script src="app.js" type="module"></script>
+</body>
+</html>
