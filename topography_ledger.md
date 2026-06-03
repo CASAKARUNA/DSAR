@@ -24,11 +24,11 @@
 
 ## 2. DRIVEWAY & HARDSCAPE STRUCTURE LOG
 
-* **Driveway Area:** Expansive paved concrete driveway situated on the top-left side of the drawing (representing the West side of the property facing the front street, S Cypress Dr).
+* **Driveway Area:** Expansive paved concrete driveway situated on the South side of the house (representing the front street, S Cypress Dr, at the bottom of the blueprint).
 * **Driveway Seams:** Concrete expansion seams mapped sequentially sweeping down from the garage area to the street/plot border.
 * **Scale & Width:** Exact scale width tracking the vehicle access path (corresponds to dual-garage access structures).
 * **Low Stone Walls:** Low course masonry framing walls surrounding the front patio courtyard and lining the curved driveway entry paths.
-* **Retaining Structures:** Curved perimeter retaining structures running along the southern boundary of the property (bottom/right on blueprint) and elevated tiled retainer walls (raised garden beds) along the eastern margin near S Aspen Ln (bottom of blueprint).
+* **Retaining Structures:** Curved perimeter retaining structures running along the Southern boundary of the property (bottom on blueprint).
 
 ---
 
@@ -37,11 +37,11 @@
 * **Shared Boundary (Far Left):** A crisp, straight property boundary line running North-South, separating the primary plot from the adjacent western parcel.
 * **Desert Terrain Buffer:** A clean desert sand and gravel buffer zone running parallel to the left boundary wall.
 * **Adjacent Neighbor Structure:** The next-door neighbor's residence, including its roof profile and garage facade, is visible on the far left side of the blueprint for spatial context (representing the West side of the property).
-* **North Boundary (Bottom of Blueprint):** The lot directly adjacent to the North (bottom of the layout) is a vacant, empty desert lot with no architectural structures.
+* **North Boundary (Top of Blueprint):** The lot directly adjacent to the North (top of the layout) is a vacant, empty desert lot with no architectural structures.
 * **Boundary Fencing:**
-  * **Left/Back Yard Wall:** Heavy masonry backyard wall running along the western boundary line (far left of blueprint), supporting trellised plants.
-  * **Right Wall:** Masonry wall running along the southern boundary line in the real world (far right of blueprint), terminating at a side gate with door.
-  * **Southern Curved Wall:** Lower retaining wall running along the southern boundary of the property (bottom/right of blueprint).
+  * **West/Back Yard Wall:** Heavy masonry backyard wall running along the western boundary line (far left of blueprint), supporting trellised plants.
+  * **East Wall:** Masonry wall running along the eastern boundary line (far right of blueprint), terminating at a side gate with door.
+  * **Southern Curved Wall:** Lower retaining wall running along the southern boundary of the property (bottom of blueprint).
 
 ---
 
@@ -49,9 +49,9 @@
 
 * **Grid Tracking System:** A1 to G10 tracking grid system overlay.
 * **Critical Cell Identifiers:**
-  - **Cells A8-A10:** Neighboring boundary buffer zone and neighbor facade context (West side).
-  - **Cells G8-G10:** Front entrance street border (East side), compass rose, and topographer certification stamps.
-* **Orientation:** Compass Rose indicating North pointing DOWN (towards the bottom of the map), South pointing UP (towards the top of the map), West pointing LEFT, and East pointing RIGHT (matching the existing property registry where the street is East and the neighbor is West).
+  * **Cells A8-A10:** Neighboring boundary buffer zone and neighbor facade context (West side).
+  * **Cells G8-G10:** Front entrance street border (South side), compass rose, and topographer certification stamps.
+* **Orientation:** Compass Rose indicating North pointing UP (towards the top of the map), South pointing DOWN (towards the bottom of the map), West pointing LEFT, and East pointing RIGHT (matching standard mapping orientation where the street is South, empty lot is North, and neighbor is West).
 
 ---
 
@@ -80,4 +80,4 @@
 
 ## 7. EXPLICIT STRUCTURE INCLUSION CHECK
 
-★ Explicit Structure Inclusion Check (V4.0 Master Ledger Corrected): This generated database map explicitly identifies, renders, and contains high-fidelity mapped details for: Existing Real-World House Footprint, Main Red-Tile Roof Trajectory, Active Concrete Driveway, Verified Left Boundary Fence Line, and Low Perimeter Retaining Stone Borders.
+★ Explicit Structure Inclusion Check (V4.0 Master Ledger Corrected): This generated database map explicitly identifies, renders, and contains high-fidelity mapped details for: Existing Real-World House Footprint, Main Red-Tile Roof Trajectory, Active Concrete Driveway, Verified West Boundary Fence Line, and Low Perimeter Retaining Stone Borders.
