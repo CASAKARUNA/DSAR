@@ -2055,7 +2055,7 @@ const DEFAULT_TASKS = [
     {
         id: 3,
         plantId: 4,
-        plantName: "Lantana",
+        plantName: "Kumquat",
         taskType: "Pruning",
         dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         notes: "Prune dead flowers (deadheading) to promote summer flowering clusters.",
