@@ -320,6 +320,38 @@ function loadProjectData() {
     if (!mappedPins) {
         mappedPins = (project.template === 'karuna') ? DEFAULT_PINS : [];
     }
+
+    let fertSchedule = JSON.parse(localStorage.getItem(getStorageKey('fertilizer_schedule')));
+    if (!fertSchedule) {
+        if (project.template === 'karuna') {
+            fertSchedule = [
+                {
+                    plantId: 12,
+                    plantName: "Olive Tree",
+                    nextDate: "2025-09-01",
+                    formula: "⏱️ Slow-Release Granular (14-14-14)",
+                    npk: "14-14-14"
+                },
+                {
+                    plantId: 1,
+                    plantName: "Slipper Plant",
+                    nextDate: "2025-07-15",
+                    formula: "🏜️ Cactus / Succulent (2-7-7)",
+                    npk: "2-7-7"
+                },
+                {
+                    plantId: 10,
+                    plantName: "Mexican Bush Sage",
+                    nextDate: "2025-07-03",
+                    formula: "⚖️ Balanced (10-10-10)",
+                    npk: "10-10-10"
+                }
+            ];
+            localStorage.setItem(getStorageKey('fertilizer_schedule'), JSON.stringify(fertSchedule));
+        } else {
+            fertSchedule = [];
+        }
+    }
 }
 
 // Initialize Application
@@ -1826,11 +1858,11 @@ function renderFertilizerInsights() {
         }
     });
 
-    const lastFertByZone = { A: 'Never', B: 'Never', C: 'Never' };
+    const lastFertByZone = { A: '1 year ago', B: '1 year ago', C: '1 year ago' };
     for (const log of careLogs) {
         if (log.type === 'Fertilization' || log.type === 'Fertilizer & Feed') {
             const plant = plantsState.find(p => p.id === log.plantId);
-            if (plant && lastFertByZone[plant.group] === 'Never') {
+            if (plant && (lastFertByZone[plant.group] === '1 year ago' || lastFertByZone[plant.group] === 'Never')) {
                 const dateOnly = log.date.split(',')[0];
                 lastFertByZone[plant.group] = `${plant.name} (${dateOnly})`;
             }
