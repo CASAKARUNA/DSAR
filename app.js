@@ -1406,7 +1406,6 @@ function setupEditPlantForm() {
         populatePlantDropdown();
         populateMapFilters();
         renderPins();
-        publishPlantsRegistry();  // keep D.SAR sandbox in sync
         
         showToast(`✏️ Updated plant record for ${name}!`);
     });
@@ -2158,20 +2157,6 @@ function savePlantToLocalStorage(plant) {
         images: plant.images
     };
     localStorage.setItem(getStorageKey('custom_plants'), JSON.stringify(customPlants));
-    publishPlantsRegistry();  // keep D.SAR sandbox in sync
-}
-
-// Publish a slim plant registry to localStorage for cross-page consumption (D.SAR Sandbox)
-function publishPlantsRegistry() {
-    const registry = plantsState.map(p => ({
-        id: p.id,
-        name: p.name,
-        group: p.group,
-        status: p.status,
-        avatarSrc: `assets/generated/avatar_${p.id}.png`,
-        images: p.images
-    }));
-    localStorage.setItem(getStorageKey('plants_registry'), JSON.stringify(registry));
 }
 
 function setupCreateSpeciesForm() {
