@@ -4,7 +4,7 @@ export const plantsData = [
   {
     "id": 1,
     "group": "A",
-    "name": "Slipper Plant",
+    "name": "Slipper Plant (Euphorbia lomelii)",
     "description": "Leafless succulent; Sun",
     "flowering": "Bird-like red flowers",
     "water": "Low",
@@ -13,7 +13,8 @@ export const plantsData = [
     "fact": "Looks like bird heads",
     "status": "Healthy",
     "images": [
-      "assets/generated/slipper_plant.png"
+      "assets/generated/slipper_plant.png",
+      "assets/IMG_8237.jpeg"
     ]
   },
   {
@@ -28,15 +29,13 @@ export const plantsData = [
     "fact": "Elephant browse",
     "status": "Healthy",
     "images": [
-      "assets/generated/elephant_bush.png",
-      "assets/IMG_8233.JPG",
-      "assets/IMG_8256.JPG"
+      "assets/generated/elephant_bush.png"
     ]
   },
   {
     "id": 3,
     "group": "A",
-    "name": "Baja Fairy Duster",
+    "name": "Baja Fairy Duster (Calliandra californica)",
     "description": "Airy shrub; Sun",
     "flowering": "Red \"powder-puffs\"",
     "water": "V. Low",
@@ -45,13 +44,14 @@ export const plantsData = [
     "fact": "Hummer favorite",
     "status": "Healthy",
     "images": [
-      "assets/generated/baja_fairy_duster.png"
+      "assets/generated/baja_fairy_duster.png",
+      "assets/IMG_8257.JPG"
     ]
   },
   {
     "id": 4,
-    "group": "A",
-    "name": "Kumquat",
+    "group": "C",
+    "name": "Nagami Kumquat (Citrus margarita)",
     "description": "Citrus fruit tree; Sun",
     "flowering": "Orange fruits",
     "water": "Low to moderate",
@@ -61,8 +61,9 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/lantana.png",
-      "assets/IMG_8236.JPG",
-      "assets/IMG_8258.JPG"
+      "assets/IMG_8258.JPG",
+      "assets/IMG_8235.JPG",
+      "assets/IMG_8236.JPG"
     ]
   },
   {
@@ -78,7 +79,6 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/texas_sage.png",
-      "assets/IMG_8237.jpeg",
       "assets/IMG_8259.JPG"
     ]
   },
@@ -95,7 +95,6 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/totem_pole.png",
-      "assets/IMG_8238.JPG",
       "assets/IMG_8260.JPG"
     ]
   },
@@ -112,7 +111,6 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/desert_spoon.png",
-      "assets/IMG_8239.JPG",
       "assets/IMG_8261.JPG"
     ]
   },
@@ -129,7 +127,6 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/queen_vic_agave.png",
-      "assets/IMG_8240.JPG",
       "assets/IMG_8262.JPG"
     ]
   },
@@ -146,14 +143,13 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/rosemary.png",
-      "assets/IMG_8241.JPG",
       "assets/IMG_8263.JPG"
     ]
   },
   {
     "id": 10,
     "group": "A",
-    "name": "Bougainvillea",
+    "name": "Bougainvillea (Bougainvillea)",
     "description": "Vining shrub; Sun",
     "flowering": "Colorful bracts",
     "water": "Low/Mod",
@@ -163,14 +159,14 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/bougainvillea.png",
-      "assets/IMG_8242.JPG",
-      "assets/IMG_8264.jpeg"
+      "assets/IMG_8264.jpeg",
+      "assets/IMG_8239.JPG"
     ]
   },
   {
     "id": 11,
     "group": "A",
-    "name": "Russian Sage",
+    "name": "Russian Sage (Salvia yangii)",
     "description": "Silvery subshrub; Sun",
     "flowering": "Lavender spikes",
     "water": "Low",
@@ -180,25 +176,25 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/russian_sage.png",
-      "assets/IMG_8243.JPG",
-      "assets/IMG_8265.JPG"
+      "assets/IMG_8265.JPG",
+      "assets/IMG_8240.JPG"
     ]
   },
   {
     "id": 12,
     "group": "B",
-    "name": "Olive Tree",
+    "name": "Olive Tree (Olea europaea)",
     "description": "Evergreen; Sun",
     "flowering": "Produces olives",
     "water": "Mod",
     "pruning": "Thin canopy",
     "pest": "Scale (dormant oil)",
     "fact": "Symbol of peace",
-    "status": "⚠️ SICK",
+    "status": "\u26a0\ufe0f SICK",
     "images": [
       "assets/generated/olive_tree.png",
-      "assets/IMG_8244.JPG",
-      "assets/IMG_8266.JPG"
+      "assets/IMG_8266.JPG",
+      "assets/IMG_8244.JPG"
     ]
   },
   {
@@ -214,14 +210,13 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/pomegranate.png",
-      "assets/IMG_8245.JPG",
       "assets/IMG_8267.JPG"
     ]
   },
   {
     "id": 14,
     "group": "B",
-    "name": "Bottlebrush",
+    "name": "Bottlebrush (Callistemon spp.)",
     "description": "Woody shrub; Sun",
     "flowering": "Red bristles",
     "water": "Mod",
@@ -231,14 +226,14 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/bottlebrush.png",
-      "assets/IMG_8246.JPG",
-      "assets/IMG_8268.JPG"
+      "assets/IMG_8268.JPG",
+      "assets/IMG_8243.JPG"
     ]
   },
   {
     "id": 15,
     "group": "B",
-    "name": "Smoke Bush",
+    "name": "Purple Smoke Bush (Cotinus coggygria)",
     "description": "Shrub; Sun/Part",
     "flowering": "Fuzzy plumes",
     "water": "Low/Mod",
@@ -249,7 +244,8 @@ export const plantsData = [
     "images": [
       "assets/generated/smoke_bush.png",
       "assets/IMG_8269.JPG",
-      "assets/IMG_8289.JPG"
+      "assets/IMG_8289.JPG",
+      "assets/IMG_8245.JPG"
     ]
   },
   {
@@ -282,14 +278,13 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/boxwood.png",
-      "assets/IMG_8271.JPG",
-      "assets/IMG_8291.JPG"
+      "assets/IMG_8271.JPG"
     ]
   },
   {
     "id": 18,
     "group": "B",
-    "name": "Oak Tree",
+    "name": "Live Oak Tree (Quercus virginiana)",
     "description": "Large evergreen; Sun",
     "flowering": "Acorns",
     "water": "Mod",
@@ -300,7 +295,8 @@ export const plantsData = [
     "images": [
       "assets/generated/oak_tree.png",
       "assets/IMG_8272.JPG",
-      "assets/IMG_8292.JPG"
+      "assets/IMG_8292.JPG",
+      "assets/IMG_8233.JPG"
     ]
   },
   {
@@ -357,7 +353,7 @@ export const plantsData = [
   {
     "id": 22,
     "group": "B",
-    "name": "Firethorn",
+    "name": "Firethorn (Pyracantha spp.)",
     "description": "Thorny shrub; Sun/Part",
     "flowering": "Red/orange berries",
     "water": "Mod",
@@ -368,7 +364,8 @@ export const plantsData = [
     "images": [
       "assets/generated/firethorn.png",
       "assets/IMG_8276.JPG",
-      "assets/IMG_8296.JPG"
+      "assets/IMG_8296.JPG",
+      "assets/IMG_8256.JPG"
     ]
   },
   {
@@ -398,7 +395,7 @@ export const plantsData = [
     "pruning": "Post-bloom cut",
     "pest": "Iron Chlorosis",
     "fact": "Velvety texture",
-    "status": "⚠️ SICK",
+    "status": "\u26a0\ufe0f SICK",
     "images": [
       "assets/generated/mexican_bush_sage.png",
       "assets/IMG_8278.JPG",
@@ -407,8 +404,8 @@ export const plantsData = [
   },
   {
     "id": 25,
-    "group": "C",
-    "name": "Rose Bush",
+    "group": "B",
+    "name": "Rose Bush (Rosa spp.)",
     "description": "Thorny perennial; Sun",
     "flowering": "Fragrant flowers",
     "water": "Mod",
@@ -419,7 +416,9 @@ export const plantsData = [
     "images": [
       "assets/generated/rose_bush.png",
       "assets/IMG_8279.JPG",
-      "assets/IMG_8299.JPG"
+      "assets/IMG_8299.JPG",
+      "assets/IMG_8241.JPG",
+      "assets/IMG_8242.JPG"
     ]
   },
   {
@@ -527,7 +526,7 @@ export const plantsData = [
   {
     "id": 32,
     "group": "C",
-    "name": "Gardenia",
+    "name": "Gardenia (Gardenia jasminoides)",
     "description": "Glossy evergreen; Part",
     "flowering": "Fragrant white",
     "water": "High",
@@ -538,13 +537,14 @@ export const plantsData = [
     "images": [
       "assets/generated/gardenia.png",
       "assets/IMG_8286.JPG",
-      "assets/IMG_8306.JPG"
+      "assets/IMG_8306.JPG",
+      "assets/IMG_8255.JPG"
     ]
   },
   {
     "id": 33,
-    "group": "C",
-    "name": "Podocarpus",
+    "group": "B",
+    "name": "Podocarpus (Podocarpus macrophyllus)",
     "description": "Needle-foliage; Part",
     "flowering": "Insignificant",
     "water": "Mod",
@@ -554,13 +554,14 @@ export const plantsData = [
     "status": "Healthy",
     "images": [
       "assets/generated/podocarpus.png",
-      "assets/IMG_8287.JPG"
+      "assets/IMG_8287.JPG",
+      "assets/IMG_8246.JPG"
     ]
   },
   {
     "id": 34,
-    "group": "C",
-    "name": "Grapevine",
+    "group": "B",
+    "name": "Grapevine (Vitis spp.)",
     "description": "Vining; Sun",
     "flowering": "Edible grapes",
     "water": "Consistent",
@@ -569,15 +570,14 @@ export const plantsData = [
     "fact": "Lives 100+ years",
     "status": "Healthy",
     "images": [
-      "assets/IMG_8232.jpeg",
-      "assets/IMG_8255.JPG",
-      "assets/IMG_8288.JPG"
+      "assets/IMG_8288.JPG",
+      "assets/IMG_8232.jpeg"
     ]
   },
   {
     "id": 35,
     "group": "B",
-    "name": "Crepe Myrtle",
+    "name": "Crape Myrtle (Lagerstroemia)",
     "description": "Deciduous tree; Sun",
     "flowering": "Showy crinkled clusters",
     "water": "Moderate",
@@ -586,8 +586,23 @@ export const plantsData = [
     "fact": "Bark peels to reveal smooth under-layers",
     "status": "Healthy",
     "images": [
-      "assets/IMG_8234.JPG",
-      "assets/IMG_8257.JPG"
+      "assets/IMG_8234.JPG"
+    ]
+  },
+  {
+    "id": 36,
+    "group": "A",
+    "name": "Cluster cactus (Cactaceae)",
+    "description": "Spiny clumping succulent; Sun",
+    "flowering": "Vibrant desert blooms",
+    "water": "Low",
+    "pruning": "None",
+    "pest": "Drainage",
+    "fact": "Clumping habit protects from heat",
+    "status": "Healthy",
+    "images": [
+      "assets/generated/slipper_plant.png",
+      "assets/IMG_8291.JPG"
     ]
   }
 ];

@@ -306,6 +306,10 @@ function loadProjectData() {
         });
     }
 
+    if (project.template === 'karuna') {
+        applyMasterPhotoMappings();
+    }
+
     careLogs = JSON.parse(localStorage.getItem(getStorageKey('care_logs')));
     if (!careLogs) {
         careLogs = (project.template === 'karuna') ? DEFAULT_LOGS : [];
@@ -352,6 +356,104 @@ function loadProjectData() {
             fertSchedule = [];
         }
     }
+}
+
+function applyMasterPhotoMappings() {
+    const masterMappings = {
+        "assets/IMG_8232.jpeg": { name: "Grapevine (Vitis spp.)", id: 34, group: "B" },
+        "assets/IMG_8233.JPG": { name: "Live Oak Tree (Quercus virginiana)", id: 18, group: "B" },
+        "assets/IMG_8234.JPG": { name: "Crape Myrtle (Lagerstroemia)", id: 35, group: "B" },
+        "assets/IMG_8235.JPG": { name: "Nagami Kumquat (Citrus margarita)", id: 4, group: "C" },
+        "assets/IMG_8236.JPG": { name: "Nagami Kumquat (Citrus margarita)", id: 4, group: "C" },
+        "assets/IMG_8237.jpeg": { name: "Slipper Plant (Euphorbia lomelii)", id: 1, group: "A" },
+        "assets/IMG_8238.JPG": null, // Coyote Scat (unassigned)
+        "assets/IMG_8239.JPG": { name: "Bougainvillea (Bougainvillea)", id: 10, group: "A" },
+        "assets/IMG_8240.JPG": { name: "Russian Sage (Salvia yangii)", id: 11, group: "A" },
+        "assets/IMG_8241.JPG": { name: "Rose Bush (Rosa spp.)", id: 25, group: "B" },
+        "assets/IMG_8242.JPG": { name: "Rose Bush (Rosa spp.)", id: 25, group: "B" },
+        "assets/IMG_8243.JPG": { name: "Bottlebrush (Callistemon spp.)", id: 14, group: "B" },
+        "assets/IMG_8244.JPG": { name: "Olive Tree (Olea europaea)", id: 12, group: "B" },
+        "assets/IMG_8245.JPG": { name: "Purple Smoke Bush (Cotinus coggygria)", id: 15, group: "B" },
+        "assets/IMG_8246.JPG": { name: "Podocarpus (Podocarpus macrophyllus)", id: 33, group: "B" },
+        "assets/IMG_8255.JPG": { name: "Gardenia (Gardenia jasminoides)", id: 32, group: "C" },
+        "assets/IMG_8256.JPG": { name: "Firethorn (Pyracantha spp.)", id: 22, group: "B" },
+        "assets/IMG_8257.JPG": { name: "Baja Fairy Duster (Calliandra californica)", id: 3, group: "A" },
+        "assets/IMG_8291.JPG": { name: "Cluster cactus (Cactaceae)", id: 36, group: "A" }
+    };
+
+    // Remove all master images from all plants in plantsState to avoid duplicates or old assignments
+    const mappedImages = Object.keys(masterMappings);
+    plantsState.forEach(p => {
+        if (p.images) {
+            p.images = p.images.filter(img => !mappedImages.includes(img));
+        }
+    });
+
+    // Ensure Cluster cactus (id 36) exists in plantsState
+    let clusterCactus = plantsState.find(p => p.id === 36);
+    if (!clusterCactus) {
+        clusterCactus = {
+            id: 36,
+            group: "A",
+            name: "Cluster cactus (Cactaceae)",
+            description: "Spiny clumping succulent; Sun",
+            flowering: "Vibrant desert blooms",
+            water: "Low",
+            pruning: "None",
+            pest: "Drainage",
+            fact: "Clumping habit protects from heat",
+            status: "Healthy",
+            images: ["assets/generated/slipper_plant.png"] // shape fallback
+        };
+        plantsState.push(clusterCactus);
+    }
+
+    // Reassign images to correct plants and update names/groups
+    Object.entries(masterMappings).forEach(([imgSrc, target]) => {
+        if (target !== null) {
+            const plant = plantsState.find(p => p.id === target.id);
+            if (plant) {
+                plant.name = target.name;
+                plant.group = target.group;
+                if (!plant.images) plant.images = [];
+                if (!plant.images.includes(imgSrc)) {
+                    plant.images.push(imgSrc);
+                }
+            }
+        }
+    });
+
+    // Enforce transparent shapes remain first in images array
+    plantsState.forEach(plant => {
+        const staticPlant = plantsData.find(sp => sp.id === plant.id);
+        const generatedCover = staticPlant && staticPlant.images ? staticPlant.images[0] : null;
+        if (generatedCover && plant.images && plant.images.length > 0) {
+            if (plant.images[0] !== generatedCover) {
+                plant.images = plant.images.filter(img => img !== generatedCover);
+                plant.images.unshift(generatedCover);
+            }
+        }
+    });
+
+    // Save customized state back to localStorage
+    const customPlants = {};
+    plantsState.forEach(p => {
+        const staticPlant = plantsData.find(sp => sp.id === p.id);
+        if (!staticPlant || p.name !== staticPlant.name || p.group !== staticPlant.group || JSON.stringify(p.images) !== JSON.stringify(staticPlant.images)) {
+            customPlants[p.id] = {
+                name: p.name,
+                group: p.group,
+                description: p.description || "",
+                flowering: p.flowering || "",
+                water: p.water || "",
+                pruning: p.pruning || "",
+                pest: p.pest || "",
+                fact: p.fact || "",
+                images: p.images
+            };
+        }
+    });
+    localStorage.setItem(getStorageKey('custom_plants'), JSON.stringify(customPlants));
 }
 
 // Initialize Application
