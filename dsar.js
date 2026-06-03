@@ -167,13 +167,27 @@ document.addEventListener('DOMContentLoaded', () => {
             C: '#4A90E2'    // Blue
         };
 
+        function getPlantSketchSrc(plant) {
+            if (plant.images && plant.images.length > 0) {
+                const sketch = plant.images.find(img => img.includes('assets/generated/') && img.endsWith('.png'));
+                if (sketch) return sketch;
+            }
+            if (plant.name.toLowerCase().includes('grape')) {
+                return 'assets/generated/jasmine.png';
+            }
+            if (plant.name.toLowerCase().includes('crepe')) {
+                return 'assets/generated/smoke_bush.png';
+            }
+            return 'assets/generated/rosemary.png';
+        }
+
         // Placeholder demo plants if no real data yet
         const DEMO_PLANTS = [
-            { name: 'Mesquite', group: 'B', cx: 200, cy: 260, r: 18 },
-            { name: 'Oak',      group: 'B', cx: 230, cy: 300, r: 12 },
-            { name: 'Sage',     group: 'A', cx: 120, cy: 320, r: 10 },
-            { name: 'Saguaro',  group: 'A', cx: 350, cy: 320, r: 8  },
-            { name: 'Willow',   group: 'C', cx: 480, cy: 150, r: 14 }
+            { plantId: 'demo-1', name: 'Velvet Mesquite', group: 'B', cx: 200, cy: 260, r: 18, sketchSrc: 'assets/generated/smoke_bush.png' },
+            { plantId: 'demo-2', name: 'Arizona White Oak', group: 'B', cx: 230, cy: 300, r: 18, sketchSrc: 'assets/generated/oak_tree.png' },
+            { plantId: 'demo-3', name: 'Texas Sage',     group: 'A', cx: 120, cy: 320, r: 18, sketchSrc: 'assets/generated/texas_sage.png' },
+            { plantId: 'demo-4', name: 'Totem Pole Cactus', group: 'A', cx: 350, cy: 320, r: 18, sketchSrc: 'assets/generated/totem_pole.png' },
+            { plantId: 'demo-5', name: 'Jasmine',   group: 'C', cx: 480, cy: 150, r: 18, sketchSrc: 'assets/generated/jasmine.png' }
         ];
 
         // Pre-loaded avatar image cache: { plantId -> HTMLImageElement }
@@ -205,21 +219,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Map blueprint % coords → canvas pixel coords
                         cx: (pin.x / 100) * cWidth,
                         cy: (pin.y / 100) * cHeight,
-                        r: 16,
-                        avatarSrc: plant.avatarSrc,
+                        r: 18,
+                        sketchSrc: getPlantSketchSrc(plant),
                         pinId: pin.id
                     };
                 }).filter(Boolean);
-
-                // Pre-load images for all live plants
-                liveFloraPlants.forEach(p => {
-                    if (!imgCache[p.plantId]) {
-                        const img = new Image();
-                        img.src = p.avatarSrc;
-                        img.onload = () => drawSandbox();
-                        imgCache[p.plantId] = img;
-                    }
-                });
 
                 return liveFloraPlants.length > 0;
             } catch (e) {
@@ -229,6 +233,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         isLiveData = loadLiveFlora();
+
+        // Pre-load images for all plants (live and demo)
+        function preloadImages() {
+            const plants = isLiveData ? liveFloraPlants : DEMO_PLANTS;
+            plants.forEach(p => {
+                const cacheId = p.plantId;
+                if (!imgCache[cacheId]) {
+                    const img = new Image();
+                    img.src = p.sketchSrc;
+                    img.onload = () => drawSandbox();
+                    imgCache[cacheId] = img;
+                }
+            });
+        }
+        preloadImages();
 
         // Update Flora Coverage readout based on real data
         function updateFloraCoverage() {
@@ -318,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ── Helpers for canvas drawing ────────────────────────────────────────
 
-        // Draw a circular clipped avatar image (or color fallback) with zone ring
+        // Draw a transparent plant sketch with contour outlines and drop shadow
         function drawPlantSticker(p, isHovered) {
             const r = isHovered ? p.r * 1.3 : p.r;
             const zoneColor = ZONE_COLORS[p.group] || '#8D9688';
@@ -330,45 +349,46 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isHovered) {
                 sCtx.beginPath();
                 sCtx.arc(p.cx, p.cy, r + 5, 0, Math.PI * 2);
-                sCtx.strokeStyle = zoneColor + '55';
+                sCtx.strokeStyle = zoneColor + '44';
                 sCtx.lineWidth = 4;
                 sCtx.stroke();
             }
 
-            // White backing circle (sticker border effect)
-            sCtx.beginPath();
-            sCtx.arc(p.cx, p.cy, r + 2, 0, Math.PI * 2);
-            sCtx.fillStyle = '#ffffff';
-            sCtx.fill();
+            // Apply sticker filters: multiple drop-shadows to build a solid white backing outline,
+            // then a thin zone-colored outline, and finally a soft dark drop-shadow.
+            sCtx.filter = `
+                drop-shadow(2px 0 0 #ffffff) 
+                drop-shadow(-2px 0 0 #ffffff) 
+                drop-shadow(0 2px 0 #ffffff) 
+                drop-shadow(0 -2px 0 #ffffff)
+                drop-shadow(1px 1px 0 #ffffff) 
+                drop-shadow(-1px -1px 0 #ffffff) 
+                drop-shadow(1px -1px 0 #ffffff) 
+                drop-shadow(-1px 1px 0 #ffffff)
+                drop-shadow(1px 0 0 ${zoneColor})
+                drop-shadow(-1px 0 0 ${zoneColor})
+                drop-shadow(0 1px 0 ${zoneColor})
+                drop-shadow(0 -1px 0 ${zoneColor})
+                drop-shadow(2px 4px 5px rgba(0, 0, 0, 0.35))
+            `;
 
-            // Clipped avatar image or zone-color fill
-            sCtx.beginPath();
-            sCtx.arc(p.cx, p.cy, r, 0, Math.PI * 2);
-            sCtx.clip();
+            // Draw image rotated according to plantId (gives organic hand-placed feel)
+            sCtx.translate(p.cx, p.cy);
+            const rotations = [-8, -5, -3, 0, 3, 5, 8, -6, 4, -2, 7, -4, 6, -7, 2];
+            const rotation = typeof p.plantId === 'number' ? rotations[p.plantId % rotations.length] : 4;
+            sCtx.rotate(rotation * Math.PI / 180);
 
             if (img && img.complete && img.naturalWidth > 0) {
-                sCtx.drawImage(img, p.cx - r, p.cy - r, r * 2, r * 2);
+                sCtx.drawImage(img, -r, -r, r * 2, r * 2);
             } else {
-                // Fallback: zone-colored circle
-                sCtx.fillStyle = zoneColor + 'BB';
-                sCtx.fillRect(p.cx - r, p.cy - r, r * 2, r * 2);
+                // Fallback: simple zone-colored dot
+                sCtx.fillStyle = zoneColor;
+                sCtx.beginPath();
+                sCtx.arc(0, 0, r, 0, Math.PI * 2);
+                sCtx.fill();
             }
 
             sCtx.restore();
-
-            // Zone-colored border ring
-            sCtx.beginPath();
-            sCtx.arc(p.cx, p.cy, r + 2, 0, Math.PI * 2);
-            sCtx.strokeStyle = zoneColor;
-            sCtx.lineWidth = isHovered ? 2.5 : 1.5;
-            sCtx.stroke();
-
-            // Drop shadow effect via small dark arc offset
-            sCtx.beginPath();
-            sCtx.arc(p.cx + 1.5, p.cy + 2.5, r, 0, Math.PI * 2);
-            sCtx.strokeStyle = 'rgba(0,0,0,0.12)';
-            sCtx.lineWidth = 3;
-            sCtx.stroke();
         }
 
         // Draw hover tooltip bubble above a plant

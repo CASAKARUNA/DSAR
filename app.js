@@ -863,6 +863,22 @@ function resizePinsOverlay() {
     }
 }
 
+function getPlantSketchSrc(plant) {
+    if (plant.images && plant.images.length > 0) {
+        const sketch = plant.images.find(img => img.includes('assets/generated/') && img.endsWith('.png'));
+        if (sketch) return sketch;
+    }
+    // Fallbacks for plants without generated sketches
+    if (plant.name.toLowerCase().includes('grape')) {
+        return 'assets/generated/jasmine.png'; // climber fallback
+    }
+    if (plant.name.toLowerCase().includes('crepe')) {
+        return 'assets/generated/smoke_bush.png'; // shrub/tree fallback
+    }
+    // Generic fallback
+    return 'assets/generated/rosemary.png';
+}
+
 function renderPins() {
     const overlay = document.getElementById('pins-overlay');
     if (!overlay) return;
@@ -909,7 +925,7 @@ function renderPins() {
         pinEl.innerHTML = `
             <div class="pin-sticker zone-${plant.group.toLowerCase()}">
                 <div class="pin-sticker-ring"></div>
-                <img src="assets/generated/avatar_${plant.id}.png"
+                <img src="${getPlantSketchSrc(plant)}"
                      class="pin-sticker-img"
                      alt="${plant.name}"
                      onerror="this.src='assets/references/IMG_8314.PNG'">
@@ -2120,7 +2136,8 @@ function publishPlantsRegistry() {
         name: p.name,
         group: p.group,
         status: p.status,
-        avatarSrc: `assets/generated/avatar_${p.id}.png`
+        avatarSrc: `assets/generated/avatar_${p.id}.png`,
+        images: p.images
     }));
     localStorage.setItem(getStorageKey('plants_registry'), JSON.stringify(registry));
 }
