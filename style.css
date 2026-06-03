@@ -2575,3 +2575,52 @@ body {
     color: var(--text-secondary);
 }
 
+/* DSAR Project Selector Styles */
+.project-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 20px;
+    padding-left: 15px;
+    border-left: 1px solid var(--border-glass);
+}
+
+.project-selector-dropdown {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-glass);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    outline: none;
+    transition: var(--transition-smooth);
+}
+
+.project-selector-dropdown:hover,
+.project-selector-dropdown:focus {
+    border-color: var(--color-green);
+    box-shadow: 0 0 0 2px rgba(142, 212, 175, 0.15);
+}
+
+.btn-new-project-trigger {
+    background: transparent;
+    border: 1px dashed var(--color-green);
+    color: var(--color-green);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-new-project-trigger:hover {
+    background: rgba(142, 212, 175, 0.1);
+    border-style: solid;
+    transform: translateY(-1px);
+}
+
+

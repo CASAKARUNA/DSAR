@@ -9,6 +9,19 @@ let activeMediaIndices = {}; // Track active image carousel index by plant id
 let mappedPins = [];
 let activeMapFilter = 'all';
 
+// Multi-Project Configuration State
+let projectsState = {
+    currentProjectId: 'casa-karuna',
+    projects: [
+        { id: 'casa-karuna', name: 'Casa Karuna', template: 'karuna', mapImage: 'assets/karuna_house_blueprint.png' }
+    ]
+};
+
+// Helper to get project-scoped local storage keys
+function getStorageKey(key) {
+    return `dsar_project_${projectsState.currentProjectId}_${key}`;
+}
+
 const DEFAULT_PINS = [
   { id: 1, plantId: 12, x: 60.5, y: 48.2 }, // Olive Tree
   { id: 2, plantId: 1, x: 45.2, y: 32.8 },  // Slipper Plant
@@ -35,6 +48,27 @@ const DEFAULT_LOGS = [
     notes: "Logged light supplementary deep watering. Shrub is showing excellent summer bud development.",
     date: "May 28, 2026, 8:30 AM"
   }
+];
+
+const DEFAULT_TASKS = [
+    {
+        id: 1,
+        plantId: 12,
+        plantName: "Olive Tree",
+        taskType: "Watering",
+        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        notes: "Deep soil soaking. Give approximately 15 gallons of water at drip line.",
+        completed: false
+    },
+    {
+        id: 2,
+        plantId: 15,
+        plantName: "Yellow Bells",
+        taskType: "Pruning",
+        dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        notes: "Prune dead flowers (deadheading) to promote summer flowering clusters.",
+        completed: false
+    }
 ];
 
 // Helper to compress and resize images on the client side
@@ -78,63 +112,229 @@ function compressAndResizeImage(file, maxWidth = 800, maxHeight = 800) {
     });
 }
 
-// Initialize Application
-function init() {
-    // 1. Load Plant States (with localStorage overrides for custom details and statuses)
-    const customPlants = JSON.parse(localStorage.getItem('franklin_custom_plants')) || {};
-    const savedStatuses = JSON.parse(localStorage.getItem('franklin_plant_statuses')) || {};
-    plantsState = plantsData.map(plant => {
-        let merged = { ...plant };
-        if (customPlants[plant.id]) {
-            merged = { ...merged, ...customPlants[plant.id] };
+function initProjects() {
+    const saved = localStorage.getItem('dsar_projects_config');
+    if (saved) {
+        try {
+            projectsState = JSON.parse(saved);
+        } catch (e) {
+            console.error("Failed to parse projectsState, resetting to default.", e);
         }
-        
-        // Ensure the first image is always the generated cover image from db.js
-        if (plant.images && plant.images.length > 0) {
-            const generatedCover = plant.images[0];
-            if (!merged.images) {
-                merged.images = [generatedCover];
-            } else if (merged.images[0] !== generatedCover) {
-                // Remove it from other positions if present, then prepend it
-                merged.images = merged.images.filter(img => img !== generatedCover);
-                merged.images.unshift(generatedCover);
-            }
-        }
-        
-        merged.status = savedStatuses[plant.id] || merged.status;
-        return merged;
+    } else {
+        localStorage.setItem('dsar_projects_config', JSON.stringify(projectsState));
+    }
+}
+
+function populateProjectSelector() {
+    const selector = document.getElementById('project-selector');
+    const activeLabel = document.getElementById('active-project-name');
+    if (!selector) return;
+
+    selector.innerHTML = '';
+    projectsState.projects.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        selector.appendChild(opt);
     });
 
-    // Load any newly created custom plants (where id is not in plantsData)
-    const staticIds = new Set(plantsData.map(p => p.id));
-    Object.keys(customPlants).forEach(idStr => {
-        const id = parseInt(idStr);
-        if (!staticIds.has(id)) {
-            let customPlant = { ...customPlants[id] };
-            customPlant.id = id;
-            customPlant.status = savedStatuses[id] || customPlant.status || 'Healthy';
-            plantsState.push(customPlant);
-        }
-    });
+    selector.value = projectsState.currentProjectId;
+    
+    const activeProj = projectsState.projects.find(p => p.id === projectsState.currentProjectId);
+    if (activeLabel && activeProj) {
+        activeLabel.textContent = activeProj.name;
+    }
+}
 
-    // Publish a slim registry for the D.SAR Sandbox to consume
-    publishPlantsRegistry();
+function setupProjectSelector() {
+    const selector = document.getElementById('project-selector');
+    if (selector) {
+        selector.addEventListener('change', (e) => {
+            switchProject(e.target.value);
+        });
+    }
 
-    // 2. Load Care Logs
-    careLogs = JSON.parse(localStorage.getItem('franklin_care_logs')) || DEFAULT_LOGS;
+    const trigger = document.getElementById('btn-create-project-trigger');
+    const modal = document.getElementById('create-project-dialog');
+    const closeX = document.getElementById('create-project-close-x');
+    const cancelBtn = document.getElementById('btn-cancel-create-project');
+    const form = document.getElementById('create-project-form');
 
-    // 2.5. Load Mapped Pins
-    loadMappedPins();
+    if (trigger && modal) {
+        trigger.addEventListener('click', () => {
+            modal.showModal();
+        });
+    }
+    if (closeX && modal) {
+        closeX.addEventListener('click', () => modal.close());
+    }
+    if (cancelBtn && modal) {
+        cancelBtn.addEventListener('click', () => modal.close());
+    }
 
-    // 2.6. Load Garden Tasks Planner
-    loadTasks();
+    if (form && modal) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('new-project-name').value.trim();
+            const template = document.getElementById('new-project-template').value;
+            if (!name) return;
 
-    // 3. Initialize media carousel trackers
+            createNewProject(name, template);
+            modal.close();
+            form.reset();
+        });
+    }
+}
+
+function createNewProject(name, template) {
+    const id = 'proj-' + Date.now();
+    let mapImage = '';
+    if (template === 'karuna' || template === 'clean') {
+        mapImage = 'assets/karuna_house_blueprint.png';
+    }
+
+    const newProj = {
+        id,
+        name,
+        template,
+        mapImage
+    };
+
+    projectsState.projects.push(newProj);
+    projectsState.currentProjectId = id;
+
+    // Save projects config
+    localStorage.setItem('dsar_projects_config', JSON.stringify(projectsState));
+
+    // Seed initial data based on template
+    if (template === 'karuna') {
+        localStorage.setItem(`dsar_project_${id}_custom_plants`, JSON.stringify({}));
+        localStorage.setItem(`dsar_project_${id}_plant_statuses`, JSON.stringify({}));
+        localStorage.setItem(`dsar_project_${id}_care_logs`, JSON.stringify(DEFAULT_LOGS));
+        localStorage.setItem(`dsar_project_${id}_mapped_plants`, JSON.stringify(DEFAULT_PINS));
+        localStorage.setItem(`dsar_project_${id}_garden_tasks`, JSON.stringify(DEFAULT_TASKS));
+    } else {
+        localStorage.setItem(`dsar_project_${id}_custom_plants`, JSON.stringify({}));
+        localStorage.setItem(`dsar_project_${id}_plant_statuses`, JSON.stringify({}));
+        localStorage.setItem(`dsar_project_${id}_care_logs`, JSON.stringify([]));
+        localStorage.setItem(`dsar_project_${id}_mapped_plants`, JSON.stringify([]));
+        localStorage.setItem(`dsar_project_${id}_garden_tasks`, JSON.stringify([]));
+    }
+
+    switchProject(id);
+    showToast(`🌱 New project "${name}" created!`);
+}
+
+function switchProject(id) {
+    projectsState.currentProjectId = id;
+    localStorage.setItem('dsar_projects_config', JSON.stringify(projectsState));
+    
+    // Reload state and re-render everything
+    loadProjectData();
+    
+    activeMediaIndices = {};
     plantsState.forEach(p => {
         activeMediaIndices[p.id] = 0;
     });
 
-    // 4. Setup Event Listeners
+    populatePlantDropdown();
+    populateTaskDropdown();
+    populateMapFilters();
+    
+    renderDashboard();
+    renderCatalog();
+    renderTasks();
+    renderCareLogs();
+    renderPins();
+    renderCurationGrid();
+    renderAnalytics();
+    renderFertilizerSchedule();
+    renderFertilizerInsights();
+
+    const activeLabel = document.getElementById('active-project-name');
+    const activeProj = projectsState.projects.find(p => p.id === id);
+    if (activeLabel && activeProj) {
+        activeLabel.textContent = activeProj.name;
+    }
+    const selector = document.getElementById('project-selector');
+    if (selector) {
+        selector.value = id;
+    }
+}
+
+function loadProjectData() {
+    const projId = projectsState.currentProjectId;
+    const project = projectsState.projects.find(p => p.id === projId) || projectsState.projects[0];
+    
+    // Load map image
+    const imgElement = document.getElementById('map-blueprint-img');
+    if (imgElement) {
+        imgElement.src = project.mapImage || 'assets/references/IMG_8314.PNG';
+    }
+    
+    const customPlants = JSON.parse(localStorage.getItem(getStorageKey('custom_plants')));
+    const savedStatuses = JSON.parse(localStorage.getItem(getStorageKey('plant_statuses')));
+    
+    if (project.template === 'karuna' && !customPlants && !savedStatuses) {
+        // Fallback to static db.js data for default Casa Karuna
+        plantsState = plantsData.map(plant => ({ ...plant }));
+    } else {
+        plantsState = [];
+        const customObj = customPlants || {};
+        const statusesObj = savedStatuses || {};
+        
+        if (project.template === 'karuna') {
+            plantsState = plantsData.map(plant => {
+                let merged = { ...plant };
+                if (customObj[plant.id]) {
+                    merged = { ...merged, ...customObj[plant.id] };
+                }
+                merged.status = statusesObj[plant.id] || merged.status;
+                return merged;
+            });
+        }
+        
+        const staticIds = new Set(project.template === 'karuna' ? plantsData.map(p => p.id) : []);
+        Object.keys(customObj).forEach(idStr => {
+            const id = parseInt(idStr);
+            if (!staticIds.has(id)) {
+                let customPlant = { ...customObj[id] };
+                customPlant.id = id;
+                customPlant.status = statusesObj[id] || customPlant.status || 'Healthy';
+                plantsState.push(customPlant);
+            }
+        });
+    }
+
+    careLogs = JSON.parse(localStorage.getItem(getStorageKey('care_logs')));
+    if (!careLogs) {
+        careLogs = (project.template === 'karuna') ? DEFAULT_LOGS : [];
+    }
+
+    gardenTasks = JSON.parse(localStorage.getItem(getStorageKey('garden_tasks')));
+    if (!gardenTasks) {
+        gardenTasks = (project.template === 'karuna') ? DEFAULT_TASKS : [];
+    }
+
+    mappedPins = JSON.parse(localStorage.getItem(getStorageKey('mapped_plants')));
+    if (!mappedPins) {
+        mappedPins = (project.template === 'karuna') ? DEFAULT_PINS : [];
+    }
+}
+
+// Initialize Application
+function init() {
+    initProjects();
+    populateProjectSelector();
+    setupProjectSelector();
+    loadProjectData();
+
+    // Initialize media carousel trackers
+    plantsState.forEach(p => {
+        activeMediaIndices[p.id] = 0;
+    });
+
+    // Setup Event Listeners
     setupTabs();
     setupFilters();
     setupNotebook();
@@ -147,7 +347,7 @@ function init() {
     setupCreateSpeciesForm();
     setupCardUploadListener();
 
-    // 5. Initial Render
+    // Initial Render
     renderDashboard();
     renderCatalog();
     populatePlantDropdown();
@@ -511,7 +711,7 @@ function logQuickWater(plant) {
     };
 
     careLogs.unshift(newLog);
-    localStorage.setItem('franklin_care_logs', JSON.stringify(careLogs));
+    localStorage.setItem(getStorageKey('care_logs'), JSON.stringify(careLogs));
     
     renderCareLogs();
     
@@ -540,13 +740,13 @@ function logQuickCure(plant) {
     };
 
     careLogs.unshift(newLog);
-    localStorage.setItem('franklin_care_logs', JSON.stringify(careLogs));
+    localStorage.setItem(getStorageKey('care_logs'), JSON.stringify(careLogs));
     
     // Update plant status in our local state and localStorage
     plant.status = "Healthy";
-    const savedStatuses = JSON.parse(localStorage.getItem('franklin_plant_statuses')) || {};
+    const savedStatuses = JSON.parse(localStorage.getItem(getStorageKey('plant_statuses'))) || {};
     savedStatuses[plant.id] = "Healthy";
-    localStorage.setItem('franklin_plant_statuses', JSON.stringify(savedStatuses));
+    localStorage.setItem(getStorageKey('plant_statuses'), JSON.stringify(savedStatuses));
     
     // Refresh stats counter dashboard and directory listing
     renderDashboard();
@@ -645,10 +845,10 @@ function setupMap() {
 
 // ── MAP PINNING OPERATIONS ──
 function loadMappedPins() {
-    mappedPins = JSON.parse(localStorage.getItem('franklin_mapped_plants'));
+    mappedPins = JSON.parse(localStorage.getItem(getStorageKey('mapped_plants')));
     if (!mappedPins || mappedPins.length === 0) {
         mappedPins = DEFAULT_PINS;
-        localStorage.setItem('franklin_mapped_plants', JSON.stringify(mappedPins));
+        localStorage.setItem(getStorageKey('mapped_plants'), JSON.stringify(mappedPins));
     }
 }
 
@@ -770,7 +970,7 @@ function getGridCell(x, y) {
 function deletePin(pinId) {
     if (confirm("Are you sure you want to remove this plant pin location from the map?")) {
         mappedPins = mappedPins.filter(pin => pin.id !== pinId);
-        localStorage.setItem('franklin_mapped_plants', JSON.stringify(mappedPins));
+        localStorage.setItem(getStorageKey('mapped_plants'), JSON.stringify(mappedPins));
         renderPins();
         showToast("📍 Pin removed from estate map.");
     }
@@ -952,7 +1152,7 @@ function setupMapPinForm() {
         };
         
         mappedPins.push(newPin);
-        localStorage.setItem('franklin_mapped_plants', JSON.stringify(mappedPins));
+        localStorage.setItem(getStorageKey('mapped_plants'), JSON.stringify(mappedPins));
         
         closeModal();
         renderPins();
@@ -1136,7 +1336,7 @@ function setupEditPlantForm() {
         activeMediaIndices[plantId] = 0;
         
         // Save to localStorage under franklin_custom_plants
-        const customPlants = JSON.parse(localStorage.getItem('franklin_custom_plants')) || {};
+        const customPlants = JSON.parse(localStorage.getItem(getStorageKey('custom_plants'))) || {};
         customPlants[plantId] = {
             name,
             group,
@@ -1148,7 +1348,7 @@ function setupEditPlantForm() {
             fact,
             images: filteredImages
         };
-        localStorage.setItem('franklin_custom_plants', JSON.stringify(customPlants));
+        localStorage.setItem(getStorageKey('custom_plants'), JSON.stringify(customPlants));
         
         closeModal();
         
@@ -1334,7 +1534,7 @@ function setupCareForm() {
 
             // Update Fertilizer Schedule
             if (newLog.fertNextDate) {
-                let fertSchedule = JSON.parse(localStorage.getItem('franklin_fertilizer_schedule')) || [];
+                let fertSchedule = JSON.parse(localStorage.getItem(getStorageKey('fertilizer_schedule'))) || [];
                 // remove existing for this plant
                 fertSchedule = fertSchedule.filter(item => item.plantId !== targetPlant.id);
                 fertSchedule.push({
@@ -1344,18 +1544,18 @@ function setupCareForm() {
                     formula: newLog.fertFormula,
                     npk: newLog.fertNPK
                 });
-                localStorage.setItem('franklin_fertilizer_schedule', JSON.stringify(fertSchedule));
+                localStorage.setItem(getStorageKey('fertilizer_schedule'), JSON.stringify(fertSchedule));
             }
         }
 
         careLogs.unshift(newLog);
-        localStorage.setItem('franklin_care_logs', JSON.stringify(careLogs));
+        localStorage.setItem(getStorageKey('care_logs'), JSON.stringify(careLogs));
 
         // 2. Update Plant health state globally
         targetPlant.status = status;
-        const savedStatuses = JSON.parse(localStorage.getItem('franklin_plant_statuses')) || {};
+        const savedStatuses = JSON.parse(localStorage.getItem(getStorageKey('plant_statuses'))) || {};
         savedStatuses[targetPlant.id] = status;
-        localStorage.setItem('franklin_plant_statuses', JSON.stringify(savedStatuses));
+        localStorage.setItem(getStorageKey('plant_statuses'), JSON.stringify(savedStatuses));
 
         // 3. Reset form and refresh layout
         form.reset();
@@ -1372,7 +1572,7 @@ function setupCareForm() {
     clearBtn.addEventListener('click', () => {
         if (confirm("Are you sure you want to permanently clear the garden care logs history?")) {
             careLogs = [];
-            localStorage.setItem('franklin_care_logs', JSON.stringify(careLogs));
+            localStorage.setItem(getStorageKey('care_logs'), JSON.stringify(careLogs));
             renderCareLogs();
             renderFertilizerInsights();
             showToast("🧹 Activity history cleared.");
@@ -1506,7 +1706,7 @@ function renderFertilizerSchedule() {
     const badge = document.getElementById('fert-due-count');
     if (!listContainer) return;
 
-    const fertSchedule = JSON.parse(localStorage.getItem('franklin_fertilizer_schedule')) || [];
+    const fertSchedule = JSON.parse(localStorage.getItem(getStorageKey('fertilizer_schedule'))) || [];
     listContainer.innerHTML = '';
 
     if (fertSchedule.length === 0) {
@@ -1897,7 +2097,7 @@ function reassignImage(imgSrc, oldPlantId, newPlantId) {
 }
 
 function savePlantToLocalStorage(plant) {
-    const customPlants = JSON.parse(localStorage.getItem('franklin_custom_plants')) || {};
+    const customPlants = JSON.parse(localStorage.getItem(getStorageKey('custom_plants'))) || {};
     customPlants[plant.id] = {
         name: plant.name,
         group: plant.group,
@@ -1909,7 +2109,7 @@ function savePlantToLocalStorage(plant) {
         fact: plant.fact,
         images: plant.images
     };
-    localStorage.setItem('franklin_custom_plants', JSON.stringify(customPlants));
+    localStorage.setItem(getStorageKey('custom_plants'), JSON.stringify(customPlants));
     publishPlantsRegistry();  // keep D.SAR sandbox in sync
 }
 
@@ -1922,7 +2122,7 @@ function publishPlantsRegistry() {
         status: p.status,
         avatarSrc: `assets/generated/avatar_${p.id}.png`
     }));
-    localStorage.setItem('franklin_plants_registry', JSON.stringify(registry));
+    localStorage.setItem(getStorageKey('plants_registry'), JSON.stringify(registry));
 }
 
 function setupCreateSpeciesForm() {
@@ -2064,10 +2264,10 @@ const DEFAULT_TASKS = [
 ];
 
 function loadTasks() {
-    gardenTasks = JSON.parse(localStorage.getItem('franklin_garden_tasks'));
+    gardenTasks = JSON.parse(localStorage.getItem(getStorageKey('garden_tasks')));
     if (!gardenTasks || gardenTasks.length === 0) {
         gardenTasks = DEFAULT_TASKS;
-        localStorage.setItem('franklin_garden_tasks', JSON.stringify(gardenTasks));
+        localStorage.setItem(getStorageKey('garden_tasks'), JSON.stringify(gardenTasks));
     }
 }
 
@@ -2117,7 +2317,7 @@ function setupTaskForm() {
         };
 
         gardenTasks.push(newTask);
-        localStorage.setItem('franklin_garden_tasks', JSON.stringify(gardenTasks));
+        localStorage.setItem(getStorageKey('garden_tasks'), JSON.stringify(gardenTasks));
 
         form.reset();
         if (dateInput) {
@@ -2205,7 +2405,7 @@ function completeTask(taskId) {
     if (!task) return;
 
     task.completed = true;
-    localStorage.setItem('franklin_garden_tasks', JSON.stringify(gardenTasks));
+    localStorage.setItem(getStorageKey('garden_tasks'), JSON.stringify(gardenTasks));
 
     // Automatically trigger Care Log entry
     const timestamp = new Date().toLocaleString('en-US', {
@@ -2228,9 +2428,9 @@ function completeTask(taskId) {
     if (task.taskType === 'Treatment' && plant && plant.status.includes('SICK')) {
         newStatus = 'Healthy';
         plant.status = 'Healthy';
-        const savedStatuses = JSON.parse(localStorage.getItem('franklin_plant_statuses')) || {};
+        const savedStatuses = JSON.parse(localStorage.getItem(getStorageKey('plant_statuses'))) || {};
         savedStatuses[plant.id] = 'Healthy';
-        localStorage.setItem('franklin_plant_statuses', JSON.stringify(savedStatuses));
+        localStorage.setItem(getStorageKey('plant_statuses'), JSON.stringify(savedStatuses));
         notes += " (Plant health restored to Healthy)";
     }
 
@@ -2245,7 +2445,7 @@ function completeTask(taskId) {
     };
 
     careLogs.unshift(newLog);
-    localStorage.setItem('franklin_care_logs', JSON.stringify(careLogs));
+    localStorage.setItem(getStorageKey('care_logs'), JSON.stringify(careLogs));
 
     renderDashboard();
     renderCatalog();

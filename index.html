@@ -33,8 +33,14 @@
                     <path d="M50,70 Q65,65 74,55" fill="none" stroke="currentColor" stroke-width="2"/>
                 </svg>
                 <div class="logo-text">
-                    <h1>Karuna House</h1>
-                    <span>KARUNA HOUSE</span>
+                    <h1>DSAR</h1>
+                    <span id="active-project-name">Karuna House</span>
+                </div>
+                <div class="project-selector-container">
+                    <select id="project-selector" class="project-selector-dropdown" title="Select DSAR Project">
+                        <!-- Populated dynamically -->
+                    </select>
+                    <button class="primary-btn btn-new-project-trigger" id="btn-create-project-trigger" title="Create New Project">➕ New Project</button>
                 </div>
             </div>
             
@@ -649,6 +655,32 @@
                 <div class="modal-form-actions">
                     <button type="submit" class="primary-btn">💾 Create Species</button>
                     <button type="button" class="secondary-btn" id="btn-cancel-create-species">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Create New Project Dialog (Native HTML5 Dialog) -->
+    <dialog class="modal-dialog" id="create-project-dialog" closedby="any" aria-label="Create New Project">
+        <div class="modal-content-container dialog-form-container dialog-new-project">
+            <button class="modal-close-btn" id="create-project-close-x" aria-label="Close Modal">×</button>
+            <h3>➕ Create New DSAR Project</h3>
+            <form id="create-project-form" class="edit-dialog-form">
+                <div class="form-group">
+                    <label for="new-project-name">Project Name</label>
+                    <input type="text" id="new-project-name" placeholder="e.g. Papillon" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-project-template">Select Preset Template</label>
+                    <select id="new-project-template" required>
+                        <option value="karuna">🌵 Sonoran Desert Ranch (Karuna House Starter)</option>
+                        <option value="clean">📐 Clean Hardscape Grid Canvas (V4 blueprint, empty beds)</option>
+                        <option value="blank">⏹️ Blank Canvas (No initial blueprint image or plants)</option>
+                    </select>
+                </div>
+                <div class="modal-form-actions">
+                    <button type="submit" class="primary-btn">💾 Create Project</button>
+                    <button type="button" class="secondary-btn" id="btn-cancel-create-project">Cancel</button>
                 </div>
             </form>
         </div>
