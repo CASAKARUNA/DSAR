@@ -16,16 +16,8 @@
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- Firebase SDK Import Map -->
-    <script type="importmap">
-      {
-        "imports": {
-          "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
-          "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
-          "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
-        }
-      }
-    </script>
+    <!-- Firebase Auth Module (imports directly from CDN, no import map needed) -->
+    <script type="module" src="firebase-auth.js"></script>
 </head>
 <body>
 
@@ -698,6 +690,17 @@
                     <button type="button" class="secondary-btn" id="btn-cancel-create-project">Cancel</button>
                 </div>
             </form>
+        </div>
+    </dialog>
+
+    <!-- Video Introduction Modal (Native HTML5 Dialog) -->
+    <dialog class="modal-dialog" id="video-intro-dialog" closedby="any" aria-label="DSAR Introduction Video">
+        <div class="modal-content-container video-modal-container">
+            <button class="modal-close-btn" id="video-intro-close-x" aria-label="Close Modal">×</button>
+            <div class="video-player-wrapper">
+                <video id="dsar-intro-video" src="assets/DSAR.mp4" controls playsinline></video>
+            </div>
+            <div class="modal-caption video-modal-caption">🎬 Welcome to DSAR - Karuna House Guide</div>
         </div>
     </dialog>
 
