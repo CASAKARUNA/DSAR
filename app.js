@@ -221,8 +221,10 @@ function setupProjectSelector() {
 function createNewProject(name, template) {
     const id = 'proj-' + Date.now();
     let mapImage = '';
-    if (template === 'karuna' || template === 'clean') {
+    if (template === 'karuna') {
         mapImage = 'assets/karuna_house_blueprint.png';
+    } else if (template === 'clean') {
+        mapImage = 'assets/karuna_house_blueprint_clean.png';
     }
 
     const newProj = {
