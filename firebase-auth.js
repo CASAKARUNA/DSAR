@@ -116,6 +116,7 @@ function setupAuthUI() {
         submitBtn.textContent = isRegisterMode() ? 'Creating Account…' : 'Signing In…';
 
         try {
+            window._dsarJustLoggedIn = true;
             if (isRegisterMode()) {
                 const confirmPw   = document.getElementById('auth-confirm-password').value;
                 const inviteCode  = document.getElementById('auth-invite-code').value.trim();
@@ -127,6 +128,7 @@ function setupAuthUI() {
                 await signInWithEmailAndPassword(auth, email, password);
             }
         } catch (err) {
+            window._dsarJustLoggedIn = false;
             let msg = err.message;
             if (err.code === 'auth/user-not-found')        msg = 'No account found with this email.';
             if (err.code === 'auth/wrong-password')        msg = 'Incorrect password.';
@@ -161,6 +163,13 @@ function setupAuthUI() {
                 appInitialized = true;
             } else {
                 if (window._dsarRerender) window._dsarRerender();
+            }
+
+            if (window._dsarJustLoggedIn) {
+                if (window._dsarPlayIntroVideo) {
+                    window._dsarPlayIntroVideo();
+                }
+                window._dsarJustLoggedIn = false;
             }
 
             setupRealtimeSync();

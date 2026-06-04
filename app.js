@@ -45,7 +45,7 @@ let activeMapFilter = 'all';
 let projectsState = {
     currentProjectId: 'casa-karuna',
     projects: [
-        { id: 'casa-karuna', name: 'Casa Karuna', template: 'karuna', mapImage: 'assets/karuna_house_blueprint.png' }
+        { id: 'casa-karuna', name: 'DSAR Karuna House', template: 'karuna', mapImage: 'assets/karuna_house_blueprint.png' }
     ]
 };
 
@@ -508,6 +508,7 @@ function init() {
     setupCareForm();
     setupTaskForm();
     setupModal();
+    setupVideoIntroModal();
     setupEditPlantForm();
     setupMapPinForm();
     setupCreateSpeciesForm();
@@ -1590,6 +1591,64 @@ function setupModal() {
 
             // Click was outside content area -> manual close
             modal.close();
+        });
+    }
+}
+
+function setupVideoIntroModal() {
+    const dialog = document.getElementById('video-intro-dialog');
+    const video = document.getElementById('dsar-intro-video');
+    const closeX = document.getElementById('video-intro-close-x');
+    if (!dialog || !video || !closeX) return;
+
+    // Expose play function globally for the authentication module
+    window._dsarPlayIntroVideo = playIntroVideo;
+
+    const stopAndClose = () => {
+        video.pause();
+        dialog.close();
+    };
+
+    closeX.addEventListener('click', stopAndClose);
+
+    // Stop video when the dialog is closed via Esc key or light-dismiss (closedby="any")
+    dialog.addEventListener('close', () => {
+        video.pause();
+    });
+
+    // Automatically close the dialog when the video finishes playing
+    video.addEventListener('ended', () => {
+        dialog.close();
+    });
+
+    // Fallback for browsers without closedby support (Safari)
+    if (!('closedBy' in HTMLDialogElement.prototype)) {
+        dialog.addEventListener('click', (event) => {
+            if (event.target !== dialog) return;
+
+            const rect = dialog.getBoundingClientRect();
+            const isDialogContent = (
+                rect.top <= event.clientY &&
+                event.clientY <= rect.top + rect.height &&
+                rect.left <= event.clientX &&
+                event.clientX <= rect.left + rect.width
+            );
+
+            if (isDialogContent) return;
+
+            stopAndClose();
+        });
+    }
+}
+
+function playIntroVideo() {
+    const dialog = document.getElementById('video-intro-dialog');
+    const video = document.getElementById('dsar-intro-video');
+    if (dialog && video) {
+        dialog.showModal();
+        video.currentTime = 0;
+        video.play().catch(err => {
+            console.warn('[DSAR] Autoplay blocked or failed:', err);
         });
     }
 }
