@@ -45,7 +45,7 @@ let activeMapFilter = 'all';
 let projectsState = {
     currentProjectId: 'casa-karuna',
     projects: [
-        { id: 'casa-karuna', name: 'DSAR Karuna House', template: 'karuna', mapImage: 'assets/karuna_house_blueprint.png' }
+        { id: 'casa-karuna', name: 'DSAR Karuna House', template: 'karuna', mapImage: 'assets/karuna_house_blueprint_clean.png' }
     ]
 };
 
@@ -222,7 +222,7 @@ function createNewProject(name, template) {
     const id = 'proj-' + Date.now();
     let mapImage = '';
     if (template === 'karuna') {
-        mapImage = 'assets/karuna_house_blueprint.png';
+        mapImage = 'assets/karuna_house_blueprint_clean.png';
     } else if (template === 'clean') {
         mapImage = 'assets/karuna_house_blueprint_clean.png';
     }
