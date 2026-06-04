@@ -2893,5 +2893,28 @@ body {
     display: none !important;
 }
 
+/* GitHub repository link button */
+.github-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--border-radius-md);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-glass);
+    color: var(--text-primary);
+    transition: var(--transition-smooth);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.github-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--color-green);
+    border-color: var(--color-green);
+    transform: translateY(-1px);
+}
+
 
 
