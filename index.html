@@ -15,11 +15,22 @@
     
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase SDK Import Map -->
+    <script type="importmap">
+      {
+        "imports": {
+          "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
+        }
+      }
+    </script>
 </head>
 <body>
 
-    <!-- App Wrapper -->
-    <div class="app-container">
+    <!-- App Wrapper (hidden until authenticated) -->
+    <div class="app-container hidden" id="app-container">
         
         <!-- Header -->
         <header class="app-header">
@@ -41,6 +52,10 @@
                         <!-- Populated dynamically -->
                     </select>
                     <button class="primary-btn btn-new-project-trigger" id="btn-create-project-trigger" title="Create New Project">➕ New Project</button>
+                    <div class="user-profile-badge" id="user-profile-badge">
+                        <span id="user-email-display">...</span>
+                        <button class="logout-btn" id="btn-logout" title="Sign Out">Logout 🚪</button>
+                    </div>
                 </div>
             </div>
             
@@ -690,7 +705,94 @@
     <input type="file" id="card-image-upload-input" accept="image/*" class="hidden-file-input" title="Upload Card Image">
     <input type="file" id="edit-plant-file-input" accept="image/*" class="hidden-file-input" title="Upload Edit Plant Image">
 
+    <!-- Authentication Container (shown when user is logged out) -->
+    <div id="auth-container" class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <svg width="60" height="60" viewBox="0 0 100 100" class="leaf-svg" aria-label="Botanical Logo">
+                    <path d="M50,90 C50,90 20,60 20,35 C20,15 40,10 50,30 C60,10 80,15 80,35 C80,60 50,90 50,90 Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                    <path d="M50,30 L50,90" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M50,50 Q35,45 30,35" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M50,65 Q35,60 26,50" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <div class="logo-text">
+                    <h1>DSAR</h1>
+                    <span>Karuna House Guide</span>
+                </div>
+            </div>
+            
+            <p class="auth-tagline">Botanical Catalog & Ecological Journal</p>
+            
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" id="auth-tab-login">Sign In</button>
+                <button type="button" class="auth-tab-btn" id="auth-tab-register">Create Account</button>
+            </div>
+            
+            <form id="auth-form" class="auth-form">
+                <div class="form-group">
+                    <label for="auth-email">Email Address</label>
+                    <input type="email" id="auth-email" placeholder="manager@karunahouse.org" required autocomplete="email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="auth-password">Password</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                
+                <div class="form-group hidden" id="auth-confirm-group">
+                    <label for="auth-confirm-password">Confirm Password</label>
+                    <input type="password" id="auth-confirm-password" placeholder="••••••••" autocomplete="new-password">
+                </div>
+                
+                <div class="form-group hidden" id="auth-invite-group">
+                    <label for="auth-invite-code">Estate Invite Code</label>
+                    <input type="text" id="auth-invite-code" placeholder="Enter registration security code">
+                    <span class="form-help">Access code required for authorized estate staff registration.</span>
+                </div>
+                
+                <div id="auth-error" class="auth-error-msg" aria-live="polite"></div>
+                
+                <button type="submit" id="btn-auth-submit" class="primary-btn auth-submit-btn">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auth tab switching (inline, runs immediately without waiting for Firebase module imports) -->
+    <script>
+    (function() {
+        var loginTab = document.getElementById('auth-tab-login');
+        var registerTab = document.getElementById('auth-tab-register');
+        var confirmGroup = document.getElementById('auth-confirm-group');
+        var inviteGroup = document.getElementById('auth-invite-group');
+        var submitBtn = document.getElementById('btn-auth-submit');
+        var errorBox = document.getElementById('auth-error');
+
+        if (loginTab && registerTab) {
+            loginTab.addEventListener('click', function() {
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                confirmGroup.classList.add('hidden');
+                inviteGroup.classList.add('hidden');
+                submitBtn.textContent = 'Sign In';
+                errorBox.style.display = 'none';
+                window._dsarAuthMode = 'login';
+            });
+            registerTab.addEventListener('click', function() {
+                registerTab.classList.add('active');
+                loginTab.classList.remove('active');
+                confirmGroup.classList.remove('hidden');
+                inviteGroup.classList.remove('hidden');
+                submitBtn.textContent = 'Create Account';
+                errorBox.style.display = 'none';
+                window._dsarAuthMode = 'register';
+            });
+        }
+        window._dsarAuthMode = 'login';
+    })();
+    </script>
+
     <!-- Main Application Entry JS -->
     <script src="app.js" type="module"></script>
 </body>
 </html>
+
