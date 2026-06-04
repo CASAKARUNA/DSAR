@@ -31,6 +31,7 @@
     padding: 0;
     box-sizing: border-box;
     -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -38,6 +39,7 @@ body {
     color: var(--text-primary);
     font-family: var(--font-body);
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
     background-image: 
         radial-gradient(circle at 10% 20%, rgba(142, 212, 175, 0.04) 0%, transparent 40%),
@@ -65,9 +67,14 @@ body {
     max-width: 1440px;
     margin: 0 auto;
     padding: 20px;
+    padding: max(20px, env(safe-area-inset-top, 20px))
+             max(20px, env(safe-area-inset-right, 20px))
+             max(20px, env(safe-area-inset-bottom, 20px))
+             max(20px, env(safe-area-inset-left, 20px));
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 /* Header Styles */
@@ -124,6 +131,14 @@ body {
 .header-nav {
     display: flex;
     gap: 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 4px;
+}
+.header-nav::-webkit-scrollbar {
+    display: none;
 }
 
 .nav-btn {
@@ -139,6 +154,8 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .nav-btn:hover {
@@ -325,7 +342,7 @@ body {
 /* Plant Catalog Grid */
 .catalog-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
     gap: 25px;
     padding-bottom: 40px;
 }
@@ -2089,6 +2106,7 @@ body {
 }
 
 .task-checkbox-input {
+    -webkit-appearance: none;
     appearance: none;
     background-color: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--border-glass);
@@ -2668,12 +2686,17 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     background: linear-gradient(135deg, hsl(140, 20%, 4%) 0%, hsl(140, 25%, 8%) 100%);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 10000;
     padding: 20px;
+    padding: max(20px, env(safe-area-inset-top, 20px))
+             max(20px, env(safe-area-inset-right, 20px))
+             max(20px, env(safe-area-inset-bottom, 20px))
+             max(20px, env(safe-area-inset-left, 20px));
     box-sizing: border-box;
     overflow-y: auto;
 }
@@ -2916,5 +2939,116 @@ body {
     transform: translateY(-1px);
 }
 
+/* ==========================================================================
+   IPHONE / SAFARI MOBILE COMPATIBILITY
+   ========================================================================== */
 
+/* Prevent iOS Safari auto-zoom on input focus (requires >= 16px font-size) */
+@media (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    input[type="date"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Header layout: stack and wrap for mobile */
+    .app-header {
+        padding: 16px 18px;
+        gap: 12px;
+    }
+
+    .header-logo {
+        flex-wrap: wrap;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .project-selector-container {
+        margin-left: 0;
+        padding-left: 0;
+        border-left: none;
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .user-profile-badge {
+        margin-left: 0;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .header-tagline {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    /* Navigation: compact buttons on mobile */
+    .nav-btn {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+
+    /* Section intros: tighten padding */
+    .section-intro {
+        padding: 18px 20px;
+    }
+
+    /* Planner cards: tighten padding */
+    .planner-card {
+        padding: 18px 20px;
+    }
+
+    /* Chart cards: tighten padding */
+    .chart-card {
+        padding: 18px 20px;
+    }
+
+    /* Map legend: tighten padding */
+    .map-legend-panel {
+        padding: 18px 20px;
+    }
+
+    /* Modal dialogs: full-width on mobile */
+    .modal-dialog {
+        max-width: 95%;
+    }
+
+    .dialog-form-container {
+        padding: 22px 18px;
+        width: 95vw;
+    }
+
+    .video-modal-container {
+        width: 95vw;
+    }
+
+    /* Auth card: tighten padding on mobile */
+    .auth-card {
+        padding: 30px 22px;
+    }
+}
+
+/* Extra-small screens (iPhone SE / mini) */
+@media (max-width: 400px) {
+    .catalog-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .curation-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .logo-text h1 {
+        font-size: 22px;
+    }
+}
 
