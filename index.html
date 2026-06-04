@@ -249,15 +249,74 @@
                     <h2>Garden Tasks Planner & Operations Journal</h2>
                     <p>Schedule future garden chores, view upcoming tasks, log care activities, and track historical treatments for all estate flora.</p>
                 </div>
+
+                <!-- Master Task Dashboard Stats Grid -->
+                <div class="dashboard-stats task-dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon secondary">📋</div>
+                        <div class="stat-info">
+                            <h3>Total Tasks</h3>
+                            <span class="stat-value" id="stat-total-tasks">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon gold">⏳</div>
+                        <div class="stat-info">
+                            <h3>Pending Tasks</h3>
+                            <span class="stat-value" id="stat-pending-tasks">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">✔️</div>
+                        <div class="stat-info">
+                            <h3>Completed</h3>
+                            <span class="stat-value" id="stat-completed-tasks">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" id="task-overdue-card">
+                        <div class="stat-icon alert">⚠️</div>
+                        <div class="stat-info">
+                            <h3>Overdue</h3>
+                            <span class="stat-value alert-text" id="stat-overdue-tasks">0</span>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="care-planner-layout">
                     <!-- Left Column: Tasks Board -->
                     <div class="planner-column">
                         <div class="planner-card">
-                            <div class="card-header-row">
-                                <h3>📋 Upcoming Tasks Checklist</h3>
+                            <div class="card-header-row task-header-row">
+                                <h3>📋 Master Tasks Checklist</h3>
                                 <span class="task-count-badge" id="task-pending-count">0 Pending</span>
                             </div>
+                            
+                            <!-- Advanced Filters toolbar -->
+                            <div class="task-filters-bar">
+                                <input type="text" id="task-search-input" placeholder="🔍 Search tasks by species name...">
+                                <div class="task-filters-grid">
+                                    <select id="task-filter-status" title="Filter by Task Status">
+                                        <option value="pending" selected>⏳ Pending</option>
+                                        <option value="completed">✔️ Completed</option>
+                                        <option value="all">📁 All Tasks</option>
+                                    </select>
+                                    <select id="task-filter-type" title="Filter by Task Type">
+                                        <option value="all" selected>🏷️ All Types</option>
+                                        <option value="Watering">💦 Watering</option>
+                                        <option value="Pruning">✂️ Pruning</option>
+                                        <option value="Treatment">💊 Treatment</option>
+                                        <option value="Fertilization">🧪 Feed</option>
+                                        <option value="Checkup">📋 Checkup</option>
+                                    </select>
+                                    <select id="task-filter-urgency" title="Filter by Date/Urgency">
+                                        <option value="all" selected>⚡ All Dates</option>
+                                        <option value="overdue">⚠️ Overdue</option>
+                                        <option value="today">📅 Today</option>
+                                        <option value="upcoming">🗓️ Upcoming</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="task-list" id="task-list">
                                 <!-- Dynamic checkable list rendered by app.js -->
                             </div>
@@ -311,6 +370,43 @@
                     
                     <!-- Right Column: Care Log Form & History Feed -->
                     <div class="planner-column">
+                        
+                        <!-- 📢 Alerts Configuration & Simulator Panel -->
+                        <div class="planner-card">
+                            <h3 style="border-bottom: 1px solid var(--border-glass); padding-bottom: 8px; margin-bottom: 15px;">📢 Team Alerts & Dispatch center</h3>
+                            <p style="font-size: 12.5px; color: var(--text-secondary); margin-top: -5px; margin-bottom: 20px; line-height: 1.4;">
+                                Configure alert delivery templates and manage the caretaker population (Max 5). SMS falls back to Email simulation.
+                            </p>
+                            
+                            <!-- User configuration grid (Max 5) -->
+                            <div class="alert-team-grid" id="alert-team-grid" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                                <!-- User rows populated dynamically -->
+                            </div>
+                            
+                            <!-- Customizable template -->
+                            <div class="form-group mt-3">
+                                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Custom Notification Text Template</label>
+                                <textarea id="alert-template-input" rows="2" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-glass); border-radius: var(--border-radius-md); color: var(--text-primary); font-family: var(--font-body); font-size: 13px; margin-top: 5px; outline: none; resize: vertical;" placeholder="Enter template text..."></textarea>
+                                <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">
+                                    Placeholders: <code>{name}</code>, <code>{plant}</code>, <code>{location}</code>, <code>{task}</code>, <code>{due_date}</code>, <code>{notes}</code>
+                                </div>
+                            </div>
+                            
+                            <!-- Dispatch Button -->
+                            <button type="button" class="primary-btn" id="btn-dispatch-alerts" style="width: 100%; margin-top: 15px; background: var(--color-gold); border-color: var(--color-gold); color: #000; font-weight: 700;">🚀 Dispatch Due Alerts</button>
+                            
+                            <!-- Simulated logs console -->
+                            <div class="form-group mt-3">
+                                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Alert Dispatch Live console</label>
+                                <div id="alert-logs-console" style="margin-top: 6px; padding: 12px; height: 130px; overflow-y: auto; background: #0b0d0c; border: 1px solid rgba(142,212,175,0.1); border-radius: var(--border-radius-md); font-family: monospace; font-size: 11px; color: #8ed4af; line-height: 1.4;">
+                                    <!-- Log rows populated dynamically -->
+                                </div>
+                                <div style="display: flex; justify-content: flex-end; margin-top: 5px;">
+                                    <button type="button" class="text-btn" id="btn-clear-alert-logs" style="font-size: 11px; padding: 2px 5px;">Clear Log Console</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="planner-card">
                             <h3>Record Quick Care Activity</h3>
                             <form id="care-form" class="care-quick-form">
@@ -609,6 +705,11 @@
                         <option value="" disabled selected>Choose a plant...</option>
                         <!-- Dynamic list of plants -->
                     </select>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label>Irrigation Line Coverage</label>
+                    <button type="button" id="map-pin-irrigation-btn" class="toggle-btn irrigation-toggle manual-water">🚰 Manual Watering Required</button>
                 </div>
                 
                 <div class="modal-form-actions map-pin-form-actions">

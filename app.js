@@ -20,6 +20,7 @@ function reloadAndRerender() {
     renderAnalytics();
     renderFertilizerSchedule();
     renderFertilizerInsights();
+    setupAlertsPanel();
 }
 
 // Expose rerender function for firebase-auth.js real-time sync callbacks
@@ -41,6 +42,19 @@ let activeMediaIndices = {}; // Track active image carousel index by plant id
 let mappedPins = [];
 let activeMapFilter = 'all';
 
+// Alerts State Configuration
+let alertUsers = [];
+let alertTemplate = '';
+let alertLogs = [];
+
+const DEFAULT_ALERT_USERS = [
+  { id: 1, name: "David Sardarizadeh", email: "david@karunahouse.org", phone: "+1 (520) 555-0101", channel: "sms", active: true },
+  { id: 2, name: "Maria Martinez", email: "maria@karunahouse.org", phone: "+1 (520) 555-0102", channel: "email", active: true },
+  { id: 3, name: "Jose Rodriguez", email: "jose@karunahouse.org", phone: "+1 (520) 555-0103", channel: "email", active: true }
+];
+
+const DEFAULT_ALERT_TEMPLATE = "[DSAR Alert] Hi {name}! The plant '{plant}' at grid location {location} needs {task} today. Notes: {notes}";
+
 // Multi-Project Configuration State
 let projectsState = {
     currentProjectId: 'casa-karuna',
@@ -55,9 +69,9 @@ function getStorageKey(key) {
 }
 
 const DEFAULT_PINS = [
-  { id: 1, plantId: 12, x: 60.5, y: 48.2 }, // Olive Tree
-  { id: 2, plantId: 1, x: 45.2, y: 32.8 },  // Slipper Plant
-  { id: 3, plantId: 24, x: 35.8, y: 72.1 }  // Mexican Bush Sage
+  { id: 1, plantId: 12, x: 60.5, y: 48.2, hasIrrigation: true },  // Olive Tree
+  { id: 2, plantId: 1, x: 45.2, y: 32.8, hasIrrigation: false }, // Slipper Plant
+  { id: 3, plantId: 24, x: 35.8, y: 72.1, hasIrrigation: false } // Mexican Bush Sage
 ];
 
 // Initial Seed Logs if none exist in localStorage
@@ -390,6 +404,26 @@ function loadProjectData() {
             fertSchedule = [];
         }
     }
+    alertUsers = JSON.parse(localStorage.getItem(getStorageKey('alert_users')));
+    if (!alertUsers) {
+        alertUsers = DEFAULT_ALERT_USERS;
+        localStorage.setItem(getStorageKey('alert_users'), JSON.stringify(alertUsers));
+    }
+
+    alertTemplate = localStorage.getItem(getStorageKey('alert_template'));
+    if (!alertTemplate) {
+        alertTemplate = DEFAULT_ALERT_TEMPLATE;
+        localStorage.setItem(getStorageKey('alert_template'), alertTemplate);
+    }
+
+    alertLogs = JSON.parse(localStorage.getItem(getStorageKey('alert_logs')));
+    if (!alertLogs) {
+        alertLogs = [];
+        localStorage.setItem(getStorageKey('alert_logs'), JSON.stringify(alertLogs));
+    }
+    
+    // Auto generate/verify individual plant watering tasks
+    verifyOrGenerateWateringTasks();
 }
 
 function applyMasterPhotoMappings() {
@@ -505,10 +539,12 @@ function init() {
     // Setup Event Listeners
     setupTabs();
     setupFilters();
+    setupTaskFilters();
     setupNotebook();
     setupMap();
     setupCareForm();
     setupTaskForm();
+    setupAlertsPanel();
     setupModal();
     setupVideoIntroModal();
     setupEditPlantForm();
@@ -647,6 +683,46 @@ function renderCatalog() {
         // Carousel buttons visibility
         const showCarousel = plant.images.length > 1;
 
+        // Load uncompleted tasks for this plant species
+        const todayStr = new Date().toISOString().split('T')[0];
+        const plantTasks = gardenTasks.filter(t => t.plantId === plant.id && !t.completed);
+        let tasksHtml = '';
+        if (plantTasks.length > 0) {
+            tasksHtml = `
+                <div class="card-pending-tasks" style="margin-top: 15px; padding-top: 12px; border-top: 1px dashed var(--border-glass);">
+                    <h4 style="font-family: var(--font-heading); font-size: 13px; color: var(--color-green); margin-bottom: 8px; display: flex; align-items: center; gap: 4px; font-weight: 600;">📋 Pending Tasks</h4>
+                    <div class="card-task-items-scroll" style="display: flex; flex-direction: column; gap: 6px; max-height: 110px; overflow-y: auto; padding-right: 4px;">
+                        ${plantTasks.map(t => {
+                            const isOverdue = t.dueDate < todayStr;
+                            const dateObj = new Date(t.dueDate + 'T00:00:00');
+                            const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            let taskLoc = '';
+                            if (t.pinId) {
+                                const pin = mappedPins.find(p => p.id === t.pinId);
+                                if (pin) {
+                                    taskLoc = `📍 Grid ${getGridCell(pin.x, pin.y)} `;
+                                }
+                            }
+                            return `
+                                <div class="card-task-item" style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); padding: 6px 8px; border-radius: 6px; transition: var(--transition-smooth);">
+                                    <input type="checkbox" class="card-task-checkbox" data-task-id="${t.id}" style="cursor: pointer; width: 14px; height: 14px; margin-top: 1px; flex-shrink: 0;" title="Complete task">
+                                    <div style="flex-grow: 1; line-height: 1.3;">
+                                        <span style="font-weight: 600; color: var(--text-primary);">${t.taskType}</span>
+                                        <span style="font-size: 10px; color: ${isOverdue ? 'var(--color-alert)' : 'var(--text-muted)'}; margin-left: 5px; font-weight: 500;">
+                                            ${isOverdue ? '⚠️ Overdue' : `Due ${formattedDate}`}
+                                        </span>
+                                        <div style="font-size: 10.5px; color: var(--text-secondary); margin-top: 2px;">
+                                            ${taskLoc}${t.notes || ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
         card.innerHTML = `
             <div class="card-media">
                 <img src="${currentImgPath}" alt="${plant.name}" loading="lazy">
@@ -702,6 +778,8 @@ function renderCatalog() {
                 </div>
 
                 <p class="card-fact">💡 ${plant.fact}</p>
+                
+                ${tasksHtml}
                 
                 <div class="card-actions">
                     ${isSick ? `
@@ -841,6 +919,24 @@ function renderCatalog() {
             });
         }
 
+        // Card Tasks Event Handlers
+        const cardTaskCheckboxes = card.querySelectorAll('.card-task-checkbox');
+        cardTaskCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                    const taskId = parseInt(checkbox.getAttribute('data-task-id'));
+                    const taskRow = checkbox.closest('.card-task-item');
+                    if (taskRow) {
+                        taskRow.style.opacity = '0.5';
+                        taskRow.style.textDecoration = 'line-through';
+                    }
+                    setTimeout(() => {
+                        completeTask(taskId);
+                    }, 400);
+                }
+            });
+        });
+
         grid.appendChild(card);
     });
 }
@@ -856,6 +952,18 @@ function setupFilters() {
     zoneFilter.addEventListener('change', renderCatalog);
     sunFilter.addEventListener('change', renderCatalog);
     statusFilter.addEventListener('change', renderCatalog);
+}
+
+function setupTaskFilters() {
+    const searchInput = document.getElementById('task-search-input');
+    const statusFilter = document.getElementById('task-filter-status');
+    const typeFilter = document.getElementById('task-filter-type');
+    const urgencyFilter = document.getElementById('task-filter-urgency');
+
+    if (searchInput) searchInput.addEventListener('input', renderTasks);
+    if (statusFilter) statusFilter.addEventListener('change', renderTasks);
+    if (typeFilter) typeFilter.addEventListener('change', renderTasks);
+    if (urgencyFilter) urgencyFilter.addEventListener('change', renderTasks);
 }
 
 // ── PORTABLE CARE ACTION DIALOGS ──
@@ -1069,7 +1177,8 @@ function renderPins() {
         if (!plant) return;
         
         const pinEl = document.createElement('div');
-        pinEl.className = `map-pin zone-${plant.group.toLowerCase()}`;
+        const pinIrrigated = Boolean(pin.hasIrrigation);
+        pinEl.className = `map-pin zone-${plant.group.toLowerCase()} ${pinIrrigated ? 'irrigated' : ''}`;
         pinEl.style.left = `${pin.x}%`;
         pinEl.style.top = `${pin.y}%`;
         pinEl.setAttribute('data-pin-id', pin.id);
@@ -1090,6 +1199,9 @@ function renderPins() {
         const statusClass = isSick ? 'status-sick' : 'status-healthy';
         const statusText = isSick ? '⚠️ Attention' : '✓ Healthy';
         const firstImg = plant.images[0] || 'assets/references/IMG_8314.PNG';
+        const irrigationBadge = pinIrrigated ? 
+            `<span class="tooltip-badge status-irrigated" style="background: rgba(43, 115, 180, 0.15); color: var(--color-blue); border: 1px solid rgba(43, 115, 180, 0.3);">💧 Irrigated</span>` : 
+            `<span class="tooltip-badge status-manual" style="background: rgba(220, 100, 60, 0.15); color: var(--color-terracotta); border: 1px solid rgba(220, 100, 60, 0.3);">🚰 Manual</span>`;
         
         pinEl.innerHTML = `
             <div class="pin-sticker zone-${plant.group.toLowerCase()}">
@@ -1099,6 +1211,7 @@ function renderPins() {
                      alt="${plant.name}"
                      onerror="this.src='assets/references/IMG_8314.PNG'">
                 <span class="pin-sticker-label">${shortName}</span>
+                ${pinIrrigated ? '<span class="pin-irrigation-dot" style="position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: var(--color-blue); border: 1.5px solid #000; box-shadow: 0 0 5px var(--color-blue); z-index: 10;"></span>' : ''}
             </div>
             <div class="pin-tooltip">
                 <img src="${firstImg}" alt="${plant.name}" class="tooltip-thumb" onerror="this.src='assets/references/IMG_8314.PNG'">
@@ -1106,6 +1219,7 @@ function renderPins() {
                 <div class="tooltip-badges">
                     <span class="tooltip-badge zone-${plant.group.toLowerCase()}">Zone ${plant.group}</span>
                     <span class="tooltip-badge ${statusClass}">${statusText}</span>
+                    ${irrigationBadge}
                 </div>
                 <div class="tooltip-coords">
                     <span>Grid Cell: ${gridCode}</span>
@@ -1113,6 +1227,7 @@ function renderPins() {
                 </div>
                 <div class="tooltip-actions">
                     <button class="btn-tooltip-view" data-plant-id="${plant.id}">Catalog</button>
+                    <button class="btn-tooltip-irrigation" data-pin-id="${pin.id}" style="background: rgba(142,212,175,0.06); border: 1px solid var(--border-glass); border-radius: 4px; padding: 4px 8px; color: var(--text-secondary); font-size: 11px; cursor: pointer; font-family: var(--font-body); font-weight: 600; transition: var(--transition-smooth);">${pinIrrigated ? '🚰 Set Manual' : '💧 Set Irrigated'}</button>
                     <button class="btn-tooltip-delete" data-pin-id="${pin.id}">Delete Pin</button>
                 </div>
             </div>
@@ -1127,6 +1242,11 @@ function renderPins() {
         pinEl.querySelector('.btn-tooltip-view').addEventListener('click', (e) => {
             e.stopPropagation();
             jumpToCatalogPlant(plant.id);
+        });
+        
+        pinEl.querySelector('.btn-tooltip-irrigation').addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePinIrrigation(pin.id);
         });
         
         pinEl.querySelector('.btn-tooltip-delete').addEventListener('click', (e) => {
@@ -1156,9 +1276,35 @@ function deletePin(pinId) {
     if (confirm("Are you sure you want to remove this plant pin location from the map?")) {
         mappedPins = mappedPins.filter(pin => pin.id !== pinId);
         localStorage.setItem(getStorageKey('mapped_plants'), JSON.stringify(mappedPins));
+        
+        // Clean up orphaned tasks & regenerate
+        if (window.verifyOrGenerateWateringTasks) {
+            verifyOrGenerateWateringTasks();
+        }
+        
         renderPins();
+        renderTasks();
         showToast("📍 Pin removed from estate map.");
     }
+}
+
+function togglePinIrrigation(pinId) {
+    const pin = mappedPins.find(p => p.id === pinId);
+    if (!pin) return;
+    
+    pin.hasIrrigation = !pin.hasIrrigation;
+    localStorage.setItem(getStorageKey('mapped_plants'), JSON.stringify(mappedPins));
+    
+    const plant = plantsState.find(p => p.id === pin.plantId);
+    const stateText = pin.hasIrrigation ? "connected to irrigation line" : "set to manual watering";
+    showToast(`💧 ${plant ? plant.name : 'Plant'} ${stateText}.`);
+    
+    if (window.verifyOrGenerateWateringTasks) {
+        verifyOrGenerateWateringTasks();
+    }
+    
+    renderPins();
+    renderTasks();
 }
 
 function jumpToCatalogPlant(plantId) {
@@ -1290,6 +1436,13 @@ function showMapPinModal(x, y) {
     document.getElementById('map-pin-x').value = x;
     document.getElementById('map-pin-y').value = y;
     
+    // Reset irrigation button state in dialog
+    const irrigationBtn = document.getElementById('map-pin-irrigation-btn');
+    if (irrigationBtn) {
+        irrigationBtn.textContent = '🚰 Manual Watering Required';
+        irrigationBtn.className = 'toggle-btn irrigation-toggle manual-water';
+    }
+    
     // Populate dropdown
     select.innerHTML = '<option value="" disabled selected>Choose a plant...</option>';
     const sorted = [...plantsState].sort((a, b) => a.name.localeCompare(b.name));
@@ -1308,8 +1461,22 @@ function setupMapPinForm() {
     const form = document.getElementById('map-pin-form');
     const cancelBtn = document.getElementById('btn-cancel-map-pin');
     const closeX = document.getElementById('map-pin-close-x');
+    const irrigationBtn = document.getElementById('map-pin-irrigation-btn');
     
     if (!modal || !form) return;
+    
+    if (irrigationBtn) {
+        irrigationBtn.addEventListener('click', () => {
+            const isManual = irrigationBtn.classList.contains('manual-water');
+            if (isManual) {
+                irrigationBtn.textContent = '💧 Irrigation Connected';
+                irrigationBtn.className = 'toggle-btn irrigation-toggle irrigated';
+            } else {
+                irrigationBtn.textContent = '🚰 Manual Watering Required';
+                irrigationBtn.className = 'toggle-btn irrigation-toggle manual-water';
+            }
+        });
+    }
     
     const closeModal = () => {
         form.reset();
@@ -1329,18 +1496,27 @@ function setupMapPinForm() {
         const plant = plantsState.find(p => p.id === plantId);
         if (!plant) return;
         
+        const hasIrrigation = irrigationBtn ? irrigationBtn.classList.contains('irrigated') : false;
+        
         const newPin = {
             id: Date.now(),
             plantId: plantId,
             x: x,
-            y: y
+            y: y,
+            hasIrrigation: hasIrrigation
         };
         
         mappedPins.push(newPin);
         localStorage.setItem(getStorageKey('mapped_plants'), JSON.stringify(mappedPins));
         
+        // Regenerate watering tasks
+        if (window.verifyOrGenerateWateringTasks) {
+            verifyOrGenerateWateringTasks();
+        }
+        
         closeModal();
         renderPins();
+        renderTasks();
         showToast(`📍 Mapped ${plant.name} to the estate blueprint!`);
     });
     
@@ -2464,6 +2640,293 @@ function setupCardUploadListener() {
     });
 }
 
+function getWateringInterval(waterRequirement) {
+    if (!waterRequirement) return 14;
+    const req = waterRequirement.toLowerCase();
+    if (req.includes('high') || req.includes('consistent')) {
+        return 3;
+    } else if (req.includes('mod') || req.includes('medium') || req.includes('moderate')) {
+        return 7;
+    } else {
+        return 14;
+    }
+}
+
+function verifyOrGenerateWateringTasks() {
+    if (!mappedPins) return;
+    
+    // 1. Clean up orphaned tasks (tasks linked to a pin that no longer exists)
+    gardenTasks = gardenTasks.filter(t => !t.pinId || mappedPins.some(p => p.id === t.pinId));
+    
+    // 2. Scan all mapped pins
+    mappedPins.forEach(pin => {
+        const plant = plantsState.find(p => p.id === pin.plantId);
+        if (!plant) return;
+        
+        const pinIrrigated = Boolean(pin.hasIrrigation);
+        
+        if (pinIrrigated) {
+            // Irrigated plant: remove any uncompleted Watering task
+            gardenTasks = gardenTasks.filter(t => !(t.pinId === pin.id && t.taskType === 'Watering' && !t.completed));
+        } else {
+            // Manual water: ensure there is an active uncompleted Watering task
+            const hasActiveWaterTask = gardenTasks.some(t => t.pinId === pin.id && t.taskType === 'Watering' && !t.completed);
+            
+            if (!hasActiveWaterTask) {
+                const interval = getWateringInterval(plant.water);
+                const gridCode = getGridCell(pin.x, pin.y);
+                const dueDate = new Date(Date.now() + interval * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                
+                const newTask = {
+                    id: Date.now() + Math.floor(Math.random() * 1000),
+                    pinId: pin.id,
+                    plantId: pin.plantId,
+                    plantName: plant.name,
+                    taskType: 'Watering',
+                    dueDate: dueDate,
+                    notes: `Manual watering required for individual plant. Location: Grid Cell ${gridCode} (📍 ${pin.x.toFixed(1)}%, ${pin.y.toFixed(1)}%).`,
+                    completed: false
+                };
+                
+                gardenTasks.push(newTask);
+            }
+        }
+    });
+    
+    localStorage.setItem(getStorageKey('garden_tasks'), JSON.stringify(gardenTasks));
+}
+
+window.verifyOrGenerateWateringTasks = verifyOrGenerateWateringTasks;
+
+function renderAlertTeam() {
+    const grid = document.getElementById('alert-team-grid');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    
+    alertUsers.forEach((user, index) => {
+        const row = document.createElement('div');
+        row.className = 'alert-user-row';
+        row.style.display = 'grid';
+        row.style.gridTemplateColumns = '30px 1.2fr 1fr 1.5fr 100px 30px';
+        row.style.gap = '8px';
+        row.style.alignItems = 'center';
+        row.style.background = 'rgba(255, 255, 255, 0.02)';
+        row.style.padding = '8px 12px';
+        row.style.borderRadius = 'var(--border-radius-md)';
+        row.style.border = '1px solid var(--border-glass)';
+        
+        row.innerHTML = `
+            <input type="checkbox" class="user-active-checkbox" ${user.active ? 'checked' : ''} title="Toggle active status" style="cursor: pointer; width: 16px; height: 16px;">
+            <input type="text" class="user-name-input" value="${user.name}" placeholder="Name" style="padding: 4px 8px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-glass); border-radius: 4px; color: var(--text-primary); font-family: var(--font-body); font-size: 12px; outline: none; width: 100%;">
+            <input type="text" class="user-phone-input" value="${user.phone || ''}" placeholder="Phone" style="padding: 4px 8px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-glass); border-radius: 4px; color: var(--text-primary); font-family: var(--font-body); font-size: 12px; outline: none; width: 100%;">
+            <input type="email" class="user-email-input" value="${user.email || ''}" placeholder="Email" style="padding: 4px 8px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-glass); border-radius: 4px; color: var(--text-primary); font-family: var(--font-body); font-size: 12px; outline: none; width: 100%;">
+            <select class="user-channel-select" style="padding: 4px; background: rgba(0,0,0,0.25); border: 1px solid var(--border-glass); border-radius: 4px; color: var(--text-secondary); font-family: var(--font-body); font-size: 12px; outline: none; cursor: pointer; width: 100%;">
+                <option value="sms" ${user.channel === 'sms' ? 'selected' : ''}>💬 SMS</option>
+                <option value="email" ${user.channel === 'email' ? 'selected' : ''}>✉️ Email</option>
+            </select>
+            <button type="button" class="btn-delete-user" title="Remove caretaker" style="background: transparent; border: none; color: var(--color-alert); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">×</button>
+        `;
+        
+        // Listen to changes
+        row.querySelector('.user-active-checkbox').addEventListener('change', (e) => {
+            user.active = e.target.checked;
+            saveAlertUsers();
+        });
+        row.querySelector('.user-name-input').addEventListener('input', (e) => {
+            user.name = e.target.value.trim();
+            saveAlertUsers();
+        });
+        row.querySelector('.user-phone-input').addEventListener('input', (e) => {
+            user.phone = e.target.value.trim();
+            saveAlertUsers();
+        });
+        row.querySelector('.user-email-input').addEventListener('input', (e) => {
+            user.email = e.target.value.trim();
+            saveAlertUsers();
+        });
+        row.querySelector('.user-channel-select').addEventListener('change', (e) => {
+            user.channel = e.target.value;
+            saveAlertUsers();
+        });
+        row.querySelector('.btn-delete-user').addEventListener('click', () => {
+            alertUsers.splice(index, 1);
+            saveAlertUsers();
+            renderAlertTeam();
+        });
+        
+        grid.appendChild(row);
+    });
+    
+    // Add "Add Caretaker" button if population < 5
+    if (alertUsers.length < 5) {
+        const addRow = document.createElement('div');
+        addRow.style.display = 'flex';
+        addRow.style.justifyContent = 'center';
+        addRow.style.marginTop = '5px';
+        addRow.innerHTML = `
+            <button type="button" class="secondary-btn btn-add-user" style="padding: 6px 12px; font-size: 11.5px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; width: auto; font-family: var(--font-body); font-weight: 600;">➕ Add Caretaker (${alertUsers.length}/5)</button>
+        `;
+        addRow.querySelector('.btn-add-user').addEventListener('click', () => {
+            alertUsers.push({
+                id: Date.now(),
+                name: "New Caretaker",
+                email: "",
+                phone: "",
+                channel: "email",
+                active: true
+            });
+            saveAlertUsers();
+            renderAlertTeam();
+        });
+        grid.appendChild(addRow);
+    }
+}
+
+function saveAlertUsers() {
+    localStorage.setItem(getStorageKey('alert_users'), JSON.stringify(alertUsers));
+}
+
+function renderAlertLogs() {
+    const consoleEl = document.getElementById('alert-logs-console');
+    if (!consoleEl) return;
+    
+    consoleEl.innerHTML = '';
+    if (alertLogs.length === 0) {
+        consoleEl.innerHTML = `<div style="color: var(--text-muted); font-style: italic;">No dispatches logged in this session. Click 'Dispatch Due Alerts' above.</div>`;
+        return;
+    }
+    
+    alertLogs.forEach(log => {
+        const row = document.createElement('div');
+        row.style.marginBottom = '6px';
+        row.style.borderBottom = '1px solid rgba(255,255,255,0.02)';
+        row.style.paddingBottom = '4px';
+        
+        let typeColor = '#8ed4af'; // green fallback
+        if (log.includes('[Simulated SMS]')) typeColor = 'var(--color-gold)';
+        else if (log.includes('[Simulated Email]')) typeColor = 'var(--color-blue)';
+        else if (log.includes('[System Alert]')) typeColor = 'var(--color-alert)';
+        
+        row.innerHTML = `<span style="color: ${typeColor};">${log}</span>`;
+        consoleEl.appendChild(row);
+    });
+    
+    // Auto scroll to bottom
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+function setupAlertsPanel() {
+    const templateInput = document.getElementById('alert-template-input');
+    const dispatchBtn = document.getElementById('btn-dispatch-alerts');
+    const clearLogsBtn = document.getElementById('btn-clear-alert-logs');
+    
+    if (templateInput) {
+        templateInput.value = alertTemplate;
+        // Clean up previous event listener to avoid duplicates
+        const newTemplateInput = templateInput.cloneNode(true);
+        templateInput.parentNode.replaceChild(newTemplateInput, templateInput);
+        
+        newTemplateInput.addEventListener('input', (e) => {
+            alertTemplate = e.target.value;
+            localStorage.setItem(getStorageKey('alert_template'), alertTemplate);
+        });
+    }
+    
+    if (dispatchBtn) {
+        const newBtn = dispatchBtn.cloneNode(true);
+        dispatchBtn.parentNode.replaceChild(newBtn, dispatchBtn);
+        newBtn.addEventListener('click', () => {
+            dispatchAlerts();
+        });
+    }
+    
+    if (clearLogsBtn) {
+        const newBtn = clearLogsBtn.cloneNode(true);
+        clearLogsBtn.parentNode.replaceChild(newBtn, clearLogsBtn);
+        newBtn.addEventListener('click', () => {
+            alertLogs = [];
+            localStorage.setItem(getStorageKey('alert_logs'), JSON.stringify(alertLogs));
+            renderAlertLogs();
+            showToast("🧹 Alert log console cleared.");
+        });
+    }
+    
+    renderAlertTeam();
+    renderAlertLogs();
+}
+
+function dispatchAlerts() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dueTasks = gardenTasks.filter(t => !t.completed && t.dueDate <= todayStr);
+    
+    const timestamp = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+    const logDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const timeLabel = `[${logDate} ${timestamp}]`;
+    
+    if (dueTasks.length === 0) {
+        const logMsg = `${timeLabel} [System Alert] Dispatch requested. No due or overdue tasks found in planner.`;
+        alertLogs.push(logMsg);
+        localStorage.setItem(getStorageKey('alert_logs'), JSON.stringify(alertLogs));
+        renderAlertLogs();
+        showToast("📢 No due tasks found to dispatch alerts.");
+        return;
+    }
+    
+    const activeCaretakers = alertUsers.filter(u => u.active);
+    if (activeCaretakers.length === 0) {
+        const logMsg = `${timeLabel} [System Alert] Dispatch failed. No active caretakers configured.`;
+        alertLogs.push(logMsg);
+        localStorage.setItem(getStorageKey('alert_logs'), JSON.stringify(alertLogs));
+        renderAlertLogs();
+        showToast("⚠️ Dispatch failed: No active caretakers.");
+        return;
+    }
+    
+    let dispatchCount = 0;
+    
+    activeCaretakers.forEach(user => {
+        dueTasks.forEach(task => {
+            // Find location grid coordinate
+            let locationStr = 'General (Species-wide)';
+            if (task.pinId) {
+                const pin = mappedPins.find(p => p.id === task.pinId);
+                if (pin) {
+                    locationStr = `Grid ${getGridCell(pin.x, pin.y)}`;
+                }
+            }
+            
+            // Interpolate template
+            let text = alertTemplate
+                .replace(/{name}/g, user.name)
+                .replace(/{plant}/g, task.plantName)
+                .replace(/{task}/g, task.taskType)
+                .replace(/{due_date}/g, task.dueDate)
+                .replace(/{notes}/g, task.notes || '')
+                .replace(/{location}/g, locationStr);
+                
+            let logMsg = '';
+            if (user.channel === 'sms') {
+                const dest = user.phone || 'no phone';
+                logMsg = `${timeLabel} [Simulated SMS] Dispatched to ${user.name} (${dest}): "${text}"`;
+            } else {
+                const dest = user.email || 'no email';
+                logMsg = `${timeLabel} [Simulated Email] Dispatched to ${user.name} (${dest}): "${text}"`;
+            }
+            
+            alertLogs.push(logMsg);
+            dispatchCount++;
+        });
+    });
+    
+    localStorage.setItem(getStorageKey('alert_logs'), JSON.stringify(alertLogs));
+    renderAlertLogs();
+    showToast(`🚀 Dispatched ${dispatchCount} simulated alerts to caretakers!`);
+}
+
+window.setupAlertsPanel = setupAlertsPanel;
+window.dispatchAlerts = dispatchAlerts;
+
 // ── GARDEN TASKS & ANALYTICS DASHBOARD ENGINE ──
 
 function populateTaskDropdown() {
@@ -2530,30 +2993,100 @@ function renderTasks() {
     const pendingBadge = document.getElementById('task-pending-count');
     if (!container) return;
 
-    container.innerHTML = '';
-    const activeTasks = gardenTasks.filter(t => !t.completed);
-    
-    // Sort active tasks by due date (oldest/overdue first)
-    activeTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    const todayStr = new Date().toISOString().split('T')[0];
 
-    if (pendingBadge) {
-        pendingBadge.textContent = `${activeTasks.length} Pending`;
+    // 1. Calculate & Render Stats Overview
+    const totalCount = gardenTasks.length;
+    const pendingCount = gardenTasks.filter(t => !t.completed).length;
+    const completedCount = gardenTasks.filter(t => t.completed).length;
+    const overdueCount = gardenTasks.filter(t => !t.completed && t.dueDate < todayStr).length;
+
+    const totalEl = document.getElementById('stat-total-tasks');
+    const pendingEl = document.getElementById('stat-pending-tasks');
+    const completedEl = document.getElementById('stat-completed-tasks');
+    const overdueEl = document.getElementById('stat-overdue-tasks');
+    const overdueCard = document.getElementById('task-overdue-card');
+
+    if (totalEl) totalEl.textContent = totalCount;
+    if (pendingEl) pendingEl.textContent = pendingCount;
+    if (completedEl) completedEl.textContent = completedCount;
+    if (overdueEl) overdueEl.textContent = overdueCount;
+
+    if (overdueCard) {
+        if (overdueCount > 0) {
+            overdueCard.style.boxShadow = '0 0 15px rgba(224, 88, 55, 0.2)';
+            overdueCard.style.borderColor = 'rgba(224, 88, 55, 0.3)';
+        } else {
+            overdueCard.style.boxShadow = '';
+            overdueCard.style.borderColor = '';
+        }
     }
 
-    if (activeTasks.length === 0) {
+    if (pendingBadge) {
+        pendingBadge.textContent = `${pendingCount} Pending`;
+    }
+
+    // 2. Read filter values
+    const searchInput = document.getElementById('task-search-input');
+    const statusFilter = document.getElementById('task-filter-status');
+    const typeFilter = document.getElementById('task-filter-type');
+    const urgencyFilter = document.getElementById('task-filter-urgency');
+
+    const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const statusVal = statusFilter ? statusFilter.value : 'pending';
+    const typeVal = typeFilter ? typeFilter.value : 'all';
+    const urgencyVal = urgencyFilter ? urgencyFilter.value : 'all';
+
+    // 3. Filter tasks
+    let filteredTasks = gardenTasks.filter(task => {
+        // Status filter
+        if (statusVal === 'pending' && task.completed) return false;
+        if (statusVal === 'completed' && !task.completed) return false;
+
+        // Type filter
+        if (typeVal !== 'all' && task.taskType !== typeVal) return false;
+
+        // Search filter
+        if (searchVal) {
+            const matchesName = task.plantName.toLowerCase().includes(searchVal);
+            const matchesNotes = task.notes ? task.notes.toLowerCase().includes(searchVal) : false;
+            const matchesType = task.taskType.toLowerCase().includes(searchVal);
+            if (!matchesName && !matchesNotes && !matchesType) return false;
+        }
+
+        // Urgency filter
+        if (urgencyVal === 'overdue') {
+            if (task.completed || task.dueDate >= todayStr) return false;
+        } else if (urgencyVal === 'today') {
+            if (task.completed || task.dueDate !== todayStr) return false;
+        } else if (urgencyVal === 'upcoming') {
+            if (task.completed || task.dueDate <= todayStr) return false;
+        }
+
+        return true;
+    });
+
+    // 4. Sort filtered tasks
+    if (statusVal === 'completed') {
+        filteredTasks.sort((a, b) => b.id - a.id);
+    } else {
+        filteredTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    }
+
+    container.innerHTML = '';
+
+    if (filteredTasks.length === 0) {
         container.innerHTML = `
-            <div class="empty-state" style="padding: 30px 10px;">
-                <span class="empty-icon" style="font-size: 28px;">✔️</span>
-                <p style="font-size: 13px;">All caught up! No pending garden tasks.</p>
+            <div class="empty-state" style="padding: 30px 10px; text-align: center;">
+                <span class="empty-icon" style="font-size: 28px;">🍃</span>
+                <p style="font-size: 13px; color: var(--text-muted);">No tasks match the selected filters.</p>
             </div>
         `;
         return;
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    activeTasks.forEach(task => {
-        const isOverdue = task.dueDate < todayStr;
+    filteredTasks.forEach(task => {
+        const isOverdue = !task.completed && task.dueDate < todayStr;
         const dateObj = new Date(task.dueDate + 'T00:00:00');
         const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
@@ -2564,35 +3097,110 @@ function renderTasks() {
         else if (task.taskType === 'Treatment') { badgeClass = 'treatment'; emoji = '💊'; }
         else if (task.taskType === 'Fertilization') { badgeClass = 'fertilizer'; emoji = '🧪'; }
 
+        // Find pin if set
+        let locationBadge = '';
+        if (task.pinId) {
+            const pin = mappedPins.find(p => p.id === task.pinId);
+            if (pin) {
+                const cell = getGridCell(pin.x, pin.y);
+                locationBadge = `<span class="task-badge location-badge" style="color: var(--color-blue); border-color: rgba(43, 115, 180, 0.2); background: rgba(43, 115, 180, 0.05); cursor: pointer; display: inline-flex; align-items: center; gap: 3px;" title="Locate on Blueprint Map">📍 Grid ${cell}</span>`;
+            }
+        }
+
         const item = document.createElement('div');
-        item.className = 'task-item';
+        item.className = `task-item ${task.completed ? 'completed' : ''}`;
         item.innerHTML = `
-            <input type="checkbox" class="task-checkbox-input" data-task-id="${task.id}" title="Complete task">
+            <input type="checkbox" class="task-checkbox-input" data-task-id="${task.id}" title="Complete task" ${task.completed ? 'checked disabled' : ''}>
             <div class="task-item-content">
-                <div class="task-title">${task.plantName}: ${emoji} ${task.taskType}</div>
-                <div class="task-meta-row">
+                <div class="task-title" style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <span style="${task.completed ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">${task.plantName}: ${emoji} ${task.taskType}</span>
+                    ${!task.pinId ? `<button class="btn-delete-task" data-task-id="${task.id}" title="Delete task" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; padding: 2px; transition: var(--transition-smooth); margin-left: auto;">🗑️</button>` : ''}
+                </div>
+                <div class="task-meta-row" style="margin-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                     <span class="task-badge ${badgeClass}">${task.taskType}</span>
+                    ${locationBadge}
                     <span class="task-due-date ${isOverdue ? 'overdue' : ''}">
-                        ${isOverdue ? '⚠️ Overdue — ' : 'Due '}${formattedDate}
+                        ${task.completed ? 'Completed' : (isOverdue ? '⚠️ Overdue — ' : 'Due ') + formattedDate}
                     </span>
                 </div>
-                ${task.notes ? `<div class="task-instructions">${task.notes}</div>` : ''}
+                ${task.notes ? `<div class="task-instructions" style="margin-top: 4px; font-style: italic; color: var(--text-secondary);">${task.notes}</div>` : ''}
             </div>
         `;
 
         // Checkbox click listener with animations
         const checkbox = item.querySelector('.task-checkbox-input');
-        checkbox.addEventListener('change', () => {
-            if (checkbox.checked) {
-                item.classList.add('completed');
-                setTimeout(() => {
-                    completeTask(task.id);
-                }, 400);
-            }
-        });
+        if (checkbox && !task.completed) {
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                    item.classList.add('completed');
+                    setTimeout(() => {
+                        completeTask(task.id);
+                    }, 400);
+                }
+            });
+        }
+
+        // Delete button listener
+        const deleteBtn = item.querySelector('.btn-delete-task');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm("Are you sure you want to delete this task?")) {
+                    deleteTask(task.id);
+                }
+            });
+        }
+
+        // Location badge click listener to zoom and scroll to map
+        const locBadge = item.querySelector('.location-badge');
+        if (locBadge) {
+            locBadge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                jumpToMapPin(task.pinId);
+            });
+        }
 
         container.appendChild(item);
     });
+}
+
+function deleteTask(taskId) {
+    gardenTasks = gardenTasks.filter(t => t.id !== taskId);
+    localStorage.setItem(getStorageKey('garden_tasks'), JSON.stringify(gardenTasks));
+    renderTasks();
+    renderAnalytics();
+    showToast("🗑️ Task deleted.");
+}
+
+function jumpToMapPin(pinId) {
+    const pin = mappedPins.find(p => p.id === pinId);
+    if (!pin) return;
+
+    // Switch to map tab
+    const tabBtn = document.getElementById('tab-map');
+    if (tabBtn) tabBtn.click();
+
+    // Select the specific plant in map filter
+    activeMapFilter = pin.plantId;
+    const filterSelect = document.getElementById('map-filter-plant');
+    if (filterSelect) {
+        filterSelect.value = pin.plantId;
+    }
+    renderPins();
+
+    // Highlight the pin
+    setTimeout(() => {
+        const pinEl = document.querySelector(`.map-pin[data-pin-id="${pinId}"]`);
+        if (pinEl) {
+            pinEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            pinEl.style.outline = '4px solid var(--color-blue)';
+            pinEl.style.boxShadow = '0 0 25px rgba(43, 115, 180, 0.7)';
+            setTimeout(() => {
+                pinEl.style.outline = '';
+                pinEl.style.boxShadow = '';
+            }, 3000);
+        }
+    }, 250);
 }
 
 function completeTask(taskId) {
@@ -2619,6 +3227,14 @@ function completeTask(taskId) {
         newStatus = plant.status;
     }
 
+    if (task.pinId) {
+        const pin = mappedPins.find(p => p.id === task.pinId);
+        if (pin) {
+            const cell = getGridCell(pin.x, pin.y);
+            notes += ` (Performed at individual plant location in Grid Cell ${cell})`;
+        }
+    }
+
     // If treating a sick plant, restore it to Healthy
     if (task.taskType === 'Treatment' && plant && plant.status.includes('SICK')) {
         newStatus = 'Healthy';
@@ -2642,9 +3258,15 @@ function completeTask(taskId) {
     careLogs.unshift(newLog);
     localStorage.setItem(getStorageKey('care_logs'), JSON.stringify(careLogs));
 
+    // Auto generate next watering task for manual plants
+    verifyOrGenerateWateringTasks();
+
     renderDashboard();
     renderCatalog();
     renderTasks();
+    if (window.renderMasterTaskDashboard) {
+        renderMasterTaskDashboard();
+    }
     renderCareLogs();
     renderAnalytics();
 

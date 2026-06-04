@@ -3055,3 +3055,108 @@ body {
     }
 }
 
+/* Master Task Dashboard Stats */
+.task-dashboard-stats {
+    margin-bottom: 25px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.task-dashboard-stats .stat-card {
+    background: rgba(18, 24, 21, 0.5);
+}
+
+.task-dashboard-stats .stat-icon.secondary {
+    color: var(--text-secondary);
+}
+
+.task-dashboard-stats .stat-icon.gold {
+    color: var(--color-gold);
+}
+
+.task-dashboard-stats .stat-icon.green {
+    color: var(--color-green);
+}
+
+.task-dashboard-stats .stat-icon.alert {
+    color: var(--color-alert);
+}
+
+/* Master Task Checklist Header */
+.task-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-glass);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+/* Advanced Filters Toolbar */
+.task-filters-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+#task-search-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--border-radius-md);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    outline: none;
+    transition: var(--transition-smooth);
+}
+
+.task-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.task-filters-grid select {
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--border-radius-md);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+}
+
+.care-planner-layout .task-list {
+    max-height: 400px;
+}
+
+/* Irrigation toggle button in map pin modal */
+.irrigation-toggle {
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--border-radius-md);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    border: 1px solid var(--border-glass);
+    transition: var(--transition-smooth);
+}
+
+.irrigation-toggle.manual-water {
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text-secondary);
+}
+
+.irrigation-toggle.irrigated {
+    background: rgba(43, 115, 180, 0.15) !important;
+    color: var(--color-blue) !important;
+    border: 1px solid rgba(43, 115, 180, 0.4) !important;
+}
+
+
