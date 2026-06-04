@@ -2460,43 +2460,6 @@ function setupCardUploadListener() {
 }
 
 // ── GARDEN TASKS & ANALYTICS DASHBOARD ENGINE ──
-const DEFAULT_TASKS = [
-    {
-        id: 1,
-        plantId: 12,
-        plantName: "Olive Tree",
-        taskType: "Treatment",
-        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        notes: "Perform diagnostic follow-up on scale infestation. Check leaves for new pest activity.",
-        completed: false
-    },
-    {
-        id: 2,
-        plantId: 2,
-        plantName: "Elephant Bush",
-        taskType: "Watering",
-        dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        notes: "Give 2 gallons of deep soak irrigation. Avoid overwatering roots.",
-        completed: false
-    },
-    {
-        id: 3,
-        plantId: 4,
-        plantName: "Kumquat",
-        taskType: "Pruning",
-        dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        notes: "Prune dead flowers (deadheading) to promote summer flowering clusters.",
-        completed: false
-    }
-];
-
-function loadTasks() {
-    gardenTasks = JSON.parse(localStorage.getItem(getStorageKey('garden_tasks')));
-    if (!gardenTasks || gardenTasks.length === 0) {
-        gardenTasks = DEFAULT_TASKS;
-        localStorage.setItem(getStorageKey('garden_tasks'), JSON.stringify(gardenTasks));
-    }
-}
 
 function populateTaskDropdown() {
     const select = document.getElementById('task-plant-select');
