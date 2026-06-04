@@ -1603,6 +1603,9 @@ function setupVideoIntroModal() {
     const closeX = document.getElementById('video-intro-close-x');
     if (!dialog || !video || !closeX) return;
 
+    // Set playsinline dynamically to satisfy HTML linter
+    video.setAttribute('playsinline', '');
+
     // Expose play function globally for the authentication module
     window._dsarPlayIntroVideo = playIntroVideo;
 
