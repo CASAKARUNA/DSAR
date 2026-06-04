@@ -670,19 +670,21 @@ function renderCatalog() {
         card.className = 'plant-card';
         card.setAttribute('data-id', plant.id);
 
+        const photoImages = plant.images.filter(img => !img.includes('assets/generated/'));
         const activeImgIdx = activeMediaIndices[plant.id] || 0;
-        const currentImgPath = plant.images[activeImgIdx] || 'assets/references/IMG_8314.PNG';
-
+        const safeActiveImgIdx = photoImages.length > 0 ? (activeImgIdx % photoImages.length) : 0;
+        const currentImgPath = photoImages[safeActiveImgIdx] || 'assets/references/IMG_8314.PNG';
+ 
         // Badges setup
         const isSick = plant.status.includes('SICK');
         const statusClass = isSick ? 'sick' : 'healthy';
         const statusText = isSick ? 'Attention' : 'Healthy';
         const groupLabel = `Zone ${plant.group}`;
         const groupClass = `zone-${plant.group.toLowerCase()}`;
-
+ 
         // Carousel buttons visibility
-        const showCarousel = plant.images.length > 1;
-
+        const showCarousel = photoImages.length > 1;
+ 
         // Load uncompleted tasks for this plant species
         const todayStr = new Date().toISOString().split('T')[0];
         const plantTasks = gardenTasks.filter(t => t.plantId === plant.id && !t.completed);
@@ -722,7 +724,7 @@ function renderCatalog() {
                 </div>
             `;
         }
-
+ 
         card.innerHTML = `
             <div class="card-media">
                 <img src="${currentImgPath}" alt="${plant.name}" loading="lazy">
@@ -735,16 +737,16 @@ function renderCatalog() {
                 
                 <button class="card-edit-btn" title="Edit Plant Details" aria-label="Edit Plant">✏️</button>
                 <button class="card-upload-btn" title="Upload Plant Image" aria-label="Upload Image">📷</button>
-                ${plant.images.length > 0 ? `
+                ${photoImages.length > 0 ? `
                     <button class="card-delete-btn" title="Delete Current Image" aria-label="Delete Image">🗑️</button>
                 ` : ''}
-
+ 
                 ${showCarousel ? `
                     <button class="carousel-btn prev" aria-label="Previous image">‹</button>
                     <button class="carousel-btn next" aria-label="Next image">›</button>
                     <div class="carousel-dots">
-                        ${plant.images.map((_, idx) => `
-                            <span class="carousel-dot ${idx === activeImgIdx ? 'active' : ''}" data-idx="${idx}"></span>
+                        ${photoImages.map((_, idx) => `
+                            <span class="carousel-dot ${idx === safeActiveImgIdx ? 'active' : ''}" data-idx="${idx}"></span>
                         `).join('')}
                     </div>
                 ` : ''}
@@ -803,11 +805,11 @@ function renderCatalog() {
 
             nextBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const newIdx = (activeMediaIndices[plant.id] + 1) % plant.images.length;
+                const newIdx = (safeActiveImgIdx + 1) % photoImages.length;
                 activeMediaIndices[plant.id] = newIdx;
 
                 const img = card.querySelector('.card-media img');
-                img.src = plant.images[newIdx];
+                img.src = photoImages[newIdx];
 
                 const dotsList = card.querySelectorAll('.carousel-dot');
                 dotsList.forEach((dot, idx) => {
@@ -821,11 +823,11 @@ function renderCatalog() {
 
             prevBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const newIdx = (activeMediaIndices[plant.id] - 1 + plant.images.length) % plant.images.length;
+                const newIdx = (safeActiveImgIdx - 1 + photoImages.length) % photoImages.length;
                 activeMediaIndices[plant.id] = newIdx;
 
                 const img = card.querySelector('.card-media img');
-                img.src = plant.images[newIdx];
+                img.src = photoImages[newIdx];
 
                 const dotsList = card.querySelectorAll('.carousel-dot');
                 dotsList.forEach((dot, idx) => {
@@ -844,7 +846,7 @@ function renderCatalog() {
                     activeMediaIndices[plant.id] = newIdx;
 
                     const img = card.querySelector('.card-media img');
-                    img.src = plant.images[newIdx];
+                    img.src = photoImages[newIdx];
 
                     const dotsList = card.querySelectorAll('.carousel-dot');
                     dotsList.forEach((d, idx) => {
@@ -860,23 +862,29 @@ function renderCatalog() {
 
         // Quick Action Event Handlers
         if (isSick) {
-            card.querySelector('.btn-log-quick-cure').addEventListener('click', () => {
+            card.querySelector('.btn-log-quick-cure').addEventListener('click', (e) => {
+                e.stopPropagation();
                 logQuickCure(plant);
             });
-            card.querySelector('.btn-log-quick-water').addEventListener('click', () => {
+            card.querySelector('.btn-log-quick-water').addEventListener('click', (e) => {
+                e.stopPropagation();
                 logQuickWater(plant);
             });
-            card.querySelector('.btn-log-quick-fertilize').addEventListener('click', () => {
+            card.querySelector('.btn-log-quick-fertilize').addEventListener('click', (e) => {
+                e.stopPropagation();
                 logQuickFertilize(plant.id);
             });
         } else {
-            card.querySelector('.btn-log-quick-water').addEventListener('click', () => {
+            card.querySelector('.btn-log-quick-water').addEventListener('click', (e) => {
+                e.stopPropagation();
                 logQuickWater(plant);
             });
-            card.querySelector('.btn-log-journal').addEventListener('click', () => {
+            card.querySelector('.btn-log-journal').addEventListener('click', (e) => {
+                e.stopPropagation();
                 openJournalTab(plant.id);
             });
-            card.querySelector('.btn-log-quick-fertilize').addEventListener('click', () => {
+            card.querySelector('.btn-log-quick-fertilize').addEventListener('click', (e) => {
+                e.stopPropagation();
                 logQuickFertilize(plant.id);
             });
         }
@@ -902,18 +910,21 @@ function renderCatalog() {
         if (deleteBtn) {
             deleteBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const activeImgIdx = activeMediaIndices[plant.id] || 0;
-                if (plant.images && plant.images.length > 0) {
-                    if (confirm(`Are you sure you want to delete the current image from ${plant.name}?`)) {
-                        plant.images.splice(activeImgIdx, 1);
-                        savePlantToLocalStorage(plant);
-                        activeMediaIndices[plant.id] = Math.max(0, activeImgIdx - 1);
-                        
-                        renderCatalog();
-                        renderCurationGrid();
-                        renderPins();
-                        populatePlantDropdown();
-                        showToast(`🗑️ Image removed from ${plant.name}.`);
+                if (photoImages && photoImages.length > 0) {
+                    const currentImgUrl = photoImages[safeActiveImgIdx];
+                    const actualIdx = plant.images.indexOf(currentImgUrl);
+                    if (actualIdx !== -1) {
+                        if (confirm(`Are you sure you want to delete the current image from ${plant.name}?`)) {
+                            plant.images.splice(actualIdx, 1);
+                            savePlantToLocalStorage(plant);
+                            activeMediaIndices[plant.id] = Math.max(0, safeActiveImgIdx - 1);
+                            
+                            renderCatalog();
+                            renderCurationGrid();
+                            renderPins();
+                            populatePlantDropdown();
+                            showToast(`🗑️ Image removed from ${plant.name}.`);
+                        }
                     }
                 }
             });
@@ -922,7 +933,11 @@ function renderCatalog() {
         // Card Tasks Event Handlers
         const cardTaskCheckboxes = card.querySelectorAll('.card-task-checkbox');
         cardTaskCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
+            checkbox.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation();
                 if (checkbox.checked) {
                     const taskId = parseInt(checkbox.getAttribute('data-task-id'));
                     const taskRow = checkbox.closest('.card-task-item');
@@ -935,6 +950,18 @@ function renderCatalog() {
                     }, 400);
                 }
             });
+        });
+
+        // Click Card to Open Details
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.card-actions') || 
+                e.target.closest('.card-media button') || 
+                e.target.closest('.card-pending-tasks') || 
+                e.target.closest('.carousel-btn') || 
+                e.target.closest('.carousel-dots')) {
+                return;
+            }
+            openPlantDetailsModal(plant.id);
         });
 
         grid.appendChild(card);
@@ -1843,6 +1870,119 @@ function openImageModal(imgSrc, caption) {
     modalCaption.textContent = caption;
 
     modal.showModal();
+}
+
+function openPlantDetailsModal(plantId) {
+    const plant = plantsState.find(p => p.id === plantId);
+    if (!plant) return;
+
+    const dialog = document.getElementById('plant-details-dialog');
+    const body = dialog.querySelector('.plant-details-body');
+    if (!dialog || !body) return;
+
+    // Get the sticker image (starts with assets/generated/)
+    const stickerImg = plant.images.find(img => img.includes('assets/generated/')) || '';
+    
+    // Get only the photo images (excludes assets/generated/)
+    const photoImages = plant.images.filter(img => !img.includes('assets/generated/'));
+    const bannerImg = photoImages[0] || 'assets/references/IMG_8314.PNG';
+
+    const isSick = plant.status.includes('SICK');
+    const statusClass = isSick ? 'sick' : 'healthy';
+    const statusText = isSick ? '⚠️ Attention Needed' : '✓ Healthy';
+
+    // Group info
+    const zoneLabel = `Zone ${plant.group}`;
+    const zoneClass = `zone-${plant.group.toLowerCase()}`;
+
+    // Format description & fun fact
+    const factHtml = plant.fact ? `<div class="plant-details-fact">💡 <strong>Fun Fact:</strong> ${plant.fact}</div>` : '';
+
+    // Render gallery if there are multiple photos
+    let galleryHtml = '';
+    if (photoImages.length > 1) {
+        galleryHtml = `
+            <div class="plant-details-gallery">
+                <div class="plant-details-gallery-title">📷 Photo Gallery</div>
+                <div class="plant-details-gallery-grid">
+                    ${photoImages.map(img => `<img src="${img}" alt="${plant.name}" class="gallery-thumb">`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    body.innerHTML = `
+        <div class="plant-details-banner">
+            <img id="details-banner-img" src="${bannerImg}" alt="${plant.name}">
+            <div class="banner-gradient"></div>
+        </div>
+        <div class="plant-details-content">
+            <div class="plant-details-header">
+                ${stickerImg ? `
+                    <div class="plant-details-thumbnail">
+                        <img src="${stickerImg}" alt="${plant.name} Icon">
+                    </div>
+                ` : ''}
+                <div class="plant-details-title-group">
+                    <h2>${plant.name}</h2>
+                    <div class="scientific-name">
+                        Status: <span class="badge-status ${statusClass}" style="padding: 2px 6px; font-size: 11px; border-radius: 4px; display: inline-block;">${statusText}</span> | 
+                        <span class="badge-group ${zoneClass}" style="padding: 2px 6px; font-size: 11px; border-radius: 4px; display: inline-block;">${zoneLabel}</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="plant-details-desc">${plant.description}</p>
+
+            ${factHtml}
+
+            <div class="plant-details-grid">
+                <div class="detail-item">
+                    <span class="lbl">🌸 Flowering / Fruit</span>
+                    <span class="val">${plant.flowering || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="lbl">💧 Watering Rate</span>
+                    <span class="val">${plant.water || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="lbl">✂️ Pruning Season</span>
+                    <span class="val">${plant.pruning || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="lbl">🐛 Pest Watch</span>
+                    <span class="val">${plant.pest || 'N/A'}</span>
+                </div>
+            </div>
+
+            ${galleryHtml}
+        </div>
+    `;
+
+    // Setup interactive gallery click handlers
+    if (photoImages.length > 1) {
+        const thumbs = body.querySelectorAll('.gallery-thumb');
+        thumbs.forEach(thumb => {
+            thumb.addEventListener('click', () => {
+                const banner = body.querySelector('#details-banner-img');
+                if (banner) {
+                    banner.src = thumb.src;
+                }
+            });
+        });
+    }
+
+    // Setup close logic
+    const closeX = document.getElementById('plant-details-close-x');
+    const stopAndClose = () => {
+        dialog.close();
+    };
+    closeX.onclick = stopAndClose;
+    dialog.onclick = (e) => {
+        if (e.target === dialog) stopAndClose();
+    };
+
+    dialog.showModal();
 }
 
 // ── ACTIVITY JOURNAL FORM CONTROLLER ──
@@ -3193,11 +3333,9 @@ function jumpToMapPin(pinId) {
         const pinEl = document.querySelector(`.map-pin[data-pin-id="${pinId}"]`);
         if (pinEl) {
             pinEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            pinEl.style.outline = '4px solid var(--color-blue)';
-            pinEl.style.boxShadow = '0 0 25px rgba(43, 115, 180, 0.7)';
+            pinEl.classList.add('map-pin-highlight');
             setTimeout(() => {
-                pinEl.style.outline = '';
-                pinEl.style.boxShadow = '';
+                pinEl.classList.remove('map-pin-highlight');
             }, 3000);
         }
     }, 250);
